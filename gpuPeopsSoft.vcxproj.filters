@@ -115,6 +115,7 @@
     <Image Include="res\gpu.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\Directx.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gpuPeopsSoft.rc">

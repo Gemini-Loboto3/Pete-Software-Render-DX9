@@ -543,11 +543,11 @@ void OnSoftOK(HWND hW)
 {
 	GetSettings(hW);
 
-	if (!iWindowMode && !bTestModes())                     // check fullscreen sets
-	{
-		MessageBox(hW, "Resolution/color depth not supported!", "Error", MB_ICONERROR | MB_OK);
-		return;
-	}
+	//if (!iWindowMode && !bTestModes())                     // check fullscreen sets
+	//{
+	//	MessageBox(hW, "Resolution/color depth not supported!", "Error", MB_ICONERROR | MB_OK);
+	//	return;
+	//}
 
 	WriteConfig();                                        // write registry
 

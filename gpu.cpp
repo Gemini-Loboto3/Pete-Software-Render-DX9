@@ -667,6 +667,8 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 
 	LPDIRECT3DSURFACE9 Back;
 	DX.Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &Back);
+	D3DSURFACE_DESC bdesc;
+	Back->GetDesc(&bdesc);
 	{
 		extern int iResX, iResY;
 		RECT rect, dest;
@@ -736,9 +738,10 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 				DX.Device->StretchRect(DX.DDSRender, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
 				if (DX.DDSScreenPic)
 				{
-					RECT rect;
+					RECT rect, dest;
 					SetRect(&rect, 0, 0, 128, 96);
-					DX.Device->StretchRect(DX.DDSScreenPic, &rect, Back, &rect, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
+					SetRect(&dest, bdesc.Width - 128, 0, bdesc.Width, 96);
+					DX.Device->StretchRect(DX.DDSScreenPic, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
 				}
 			}
 			break;

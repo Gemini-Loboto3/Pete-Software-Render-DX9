@@ -187,6 +187,7 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\Directx.png" />
     <Image Include="res\gpu.bmp" />
   </ItemGroup>
   <ItemGroup>

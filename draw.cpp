@@ -134,11 +134,7 @@ unsigned short usCursorActive = 0;
 ////////////////////////////////////////////////////////////////////////
 
 sDX            DX;
-#if !USE_DX9
-static         DDSURFACEDESC9 ddsd;
-#else
-static			D3DSURFACE_DESC ddsd;
-#endif
+static         D3DSURFACE_DESC ddsd;
 GUID           guiDev;
 BOOL           bDeviceOK;
 HWND           hWGPU;
@@ -185,13 +181,7 @@ void SaveSurface(LPDIRECT3DSURFACE9 pSurface, LPCSTR filename, int width, int he
 static __inline void WaitVBlank(void)
 {
 	if (bVsync_Key)
-	{
-	#if !USE_DX9
-		IDirectDraw2_WaitForVerticalBlank(DX.DD, DDWAITVB_BLOCKBEGIN, 0);
-	#else
 		DX.Device->WaitForVBlank(0);
-	#endif
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -404,95 +394,6 @@ void NoStretchedBlit(void)
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-//void NoStretchedBlitEx(void)
-//{
-//	static int iOldDX = 0;
-//	static int iOldDY = 0;
-//
-//	int iDX, iDY, iX, iY; float fXS, fYS, fS;
-//
-//	if (!PreviousPSXDisplay.DisplayMode.x) return;
-//	if (!PreviousPSXDisplay.DisplayMode.y) return;
-//
-//	fXS = (float)iResX / (float)PreviousPSXDisplay.DisplayMode.x;
-//	fYS = (float)iResY / (float)PreviousPSXDisplay.DisplayMode.y;
-//	if (fXS < fYS) fS = fXS; else fS = fYS;
-//
-//	iDX = (int)(PreviousPSXDisplay.DisplayMode.x*fS);
-//	iDY = (int)(PreviousPSXDisplay.DisplayMode.y*fS);
-//
-//	iX = iResX - iDX;
-//	iY = iResY - iDY;
-//
-//	if (iX < 0) iX = 0;
-//	else     iX = iX / 2;
-//
-//	if (iY < 0) iY = 0;
-//	else     iY = iY / 2;
-//
-//	if (iOldDX != iDX || iOldDY != iDY)
-//	{
-//	#if !USE_DX9
-//		DDBLTFX     ddbltfx;
-//		ddbltfx.dwSize = sizeof(ddbltfx);
-//		ddbltfx.dwFillColor = 0x00000000;
-//		IDirectDrawSurface_Blt(DX.DDSPrimary, NULL, NULL, NULL, DDBLT_COLORFILL, &ddbltfx);
-//	#else
-//		DX.Device->ColorFill(DX.DDSPrimary, NULL, 0x000000);
-//	#endif
-//		iOldDX = iDX; iOldDY = iDY;
-//	}
-//
-//	if (iWindowMode)
-//	{
-//		RECT ScreenRect, ViewportRect;
-//		POINT Point = { 0, 0 };
-//		ClientToScreen(DX.hWnd, &Point);
-//		Point.x += iX; Point.y += iY;
-//
-//		ScreenRect.left = Point.x;
-//		ScreenRect.top = Point.y;
-//		ScreenRect.right = iDX + Point.x;
-//		ScreenRect.bottom = iDY + Point.y;
-//
-//		ViewportRect.left = 0;
-//		ViewportRect.top = 0;
-//		ViewportRect.right = PreviousPSXDisplay.DisplayMode.x;
-//		ViewportRect.bottom = PreviousPSXDisplay.DisplayMode.y;
-//
-//		WaitVBlank();
-//	#if !USE_DX9
-//		IDirectDrawSurface_Blt(DX.DDSPrimary, &ScreenRect, DX.DDSRender, &ViewportRect, DDBLT_WAIT, NULL);
-//	#else
-//		DX.Device->StretchRect(DX.DDSRender, &ViewportRect, DX.DDSPrimary, &ScreenRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
-//	#endif
-//	}
-//	else
-//	{
-//		RECT ScreenRect, ViewportRect;
-//
-//		ScreenRect.left = iX;
-//		ScreenRect.top = iY;
-//		ScreenRect.right = iDX + iX;
-//		ScreenRect.bottom = iDY + iY;
-//
-//		ViewportRect.left = 0;
-//		ViewportRect.top = 0;
-//		ViewportRect.right = PreviousPSXDisplay.DisplayMode.x;
-//		ViewportRect.bottom = PreviousPSXDisplay.DisplayMode.y;
-//
-//		WaitVBlank();
-//	#if !USE_DX9
-//		IDirectDrawSurface_Blt(DX.DDSPrimary, &ScreenRect, DX.DDSRender, &ViewportRect, DDBLT_WAIT, NULL);
-//	#else
-//		DX.Device->StretchRect(DX.DDSRender, &ViewportRect, DX.DDSPrimary, &ScreenRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
-//	#endif
-//	}
-//	if (DX.DDSScreenPic) DisplayPic();
-//}
-
-////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
 void ShowGunCursor(unsigned char * surf)
@@ -611,8 +512,6 @@ void DoBufferSwap(void)		// SWAP BUFFERS
 #else
 	DX.DDSRender->UnlockRect();
 #endif
-
-	//SaveSurface(DX.DDSRender, "Test.png");
 
 	if (ulKeybits & KEY_SHOWFPS) DisplayText();              // paint menu text
 
@@ -775,42 +674,6 @@ void DXSetGamma(void)
 ////////////////////////////////////////////////////////////////////////
 // SCAN LINE STUFF
 ////////////////////////////////////////////////////////////////////////
-
-//void SetScanLineList(LPDIRECTDRAWCLIPPER Clipper)
-//{
-//	LPRGNDATA lpCL; RECT * pr; int y; POINT Point = { 0,0 };
-//
-//	IDirectDrawClipper_SetClipList(Clipper, NULL, 0);
-//
-//	lpCL = (LPRGNDATA)malloc(sizeof(RGNDATAHEADER) + ((iResY / 2) + 1) * sizeof(RECT));
-//	if (iWindowMode) ClientToScreen(DX.hWnd, &Point);
-//
-//	lpCL->rdh.dwSize = sizeof(RGNDATAHEADER);
-//	lpCL->rdh.iType = RDH_RECTANGLES;
-//	lpCL->rdh.nCount = iResY / 2;
-//	lpCL->rdh.nRgnSize = 0;
-//	lpCL->rdh.rcBound.left = Point.x;
-//	lpCL->rdh.rcBound.top = Point.y;
-//	lpCL->rdh.rcBound.bottom = Point.y + iResY;
-//	lpCL->rdh.rcBound.right = Point.x + iResX;
-//
-//	pr = (RECT *)lpCL->Buffer;
-//	for (y = 0; y < iResY; y += 2)
-//	{
-//		pr->left = Point.x;
-//		pr->top = Point.y + y;
-//		pr->right = Point.x + iResX;
-//		pr->bottom = Point.y + y + 1;
-//		pr++;
-//	}
-//
-//	IDirectDrawClipper_SetClipList(Clipper, lpCL, 0);
-//
-//	free(lpCL);
-//}
-
-////////////////////////////////////////////////////////////////////////
-
 void MoveScanLineArea(HWND hwnd)
 {
 #if !USE_DX9
@@ -861,6 +724,12 @@ BOOL ReStart = FALSE;
 int DXinitialize()
 {
 	IDirect3D9Ex *DD;
+
+	if (!iWindowMode)
+	{
+		iResX = GetSystemMetrics(SM_CXFULLSCREEN);
+		iResY = GetSystemMetrics(SM_CYFULLSCREEN);
+	}
 
 	// init some DX vars
 	DX.hWnd = hWGPU;
@@ -973,18 +842,12 @@ void DXcleanup()                                       // DX CLEANUP
 
 	if (!bIsFirstFrame)
 	{
-		//if (DX.DDSHelper)
-		//{
-			//DX.DDSHelper->Release();
-			//DX.DDSHelper = 0;
-		//}
 		if (DX.DDSScreenPic)
 		{
 			DX.DDSScreenPic->Release();
 			DX.DDSScreenPic = 0;
 		}
 		DX.DDSRender->Release();
-		//DX.DDSPrimary->Release();
 		DX.Device->Release();
 		DX.DD->Release();
 
@@ -996,14 +859,61 @@ void DXcleanup()                                       // DX CLEANUP
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+// generate HICON to be used with window title
+HICON HICONFromPng(unsigned char *png, size_t size)
+{
+	unsigned int w, h;
+	unsigned char *out;
 
-DWORD  dwGPUStyle = 0;                                   // vars to store some wimdows stuff
+	lodepng_decode32(&out, &w, &h, png, size);
+	// swap colors
+	for (int i = 0, si = w * h; i < si; i++)
+	{
+		unsigned char r = out[i * 4 + 2];
+		unsigned char b = out[i * 4 + 0];
+		out[i * 4 + 0] = r;
+		out[i * 4 + 2] = b;
+	}
+
+	HBITMAP bitmap = ::CreateBitmap(w, h, 1, 32, out);
+	HBITMAP hbmMask = ::CreateBitmap(w, h, 1, 1, NULL);
+
+	ICONINFO ii = { 0 };
+	ii.fIcon = TRUE;
+	ii.xHotspot = 0;
+	ii.yHotspot = 0;
+	ii.hbmColor = bitmap;
+	ii.hbmMask = hbmMask;
+
+	HICON hIcon = ::CreateIconIndirect(&ii);
+	::DeleteObject(bitmap);
+	::DeleteObject(hbmMask);
+	free(out);
+
+	return hIcon;
+}
+
+void SetIcon(HWND hWnd)
+{
+	// load and lock the bitmap (lock is kinda obsolete in win32)
+	HRSRC hR = FindResource(hInst, MAKEINTRESOURCE(IDB_ICON), "PNG");
+	HGLOBAL hG = LoadResource(hInst, hR);
+	unsigned char *icon = (unsigned char*)LockResource(hG);
+
+	HICON hIcon = HICONFromPng(icon, 15788);
+	SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+	SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+}
+
+DWORD  dwGPUStyle = 0;                                   // vars to store some windows stuff
 HANDLE hGPUMenu = NULL;
 
 unsigned long ulInitDisplay(void)
 {
 	HDC hdc; RECT r;
 
+	SetIcon(hWGPU);
 	if (iWindowMode)                                       // win mode?
 	{
 		DWORD dw = GetWindowLong(hWGPU, GWL_STYLE);    // -> adjust wnd style
@@ -1032,7 +942,10 @@ unsigned long ulInitDisplay(void)
 		dwGPUStyle = dw;
 		hGPUMenu = GetMenu(hWGPU);
 
+		#define WS_BORDERLESS	(WS_POPUP | WS_VISIBLE)
+
 		dw &= ~(WS_THICKFRAME | WS_BORDER | WS_CAPTION);
+		dw |= WS_BORDERLESS;
 		SetWindowLong(hWGPU, GWL_STYLE, dw);
 		SetMenu(hWGPU, NULL);
 
@@ -1046,7 +959,7 @@ unsigned long ulInitDisplay(void)
 
 	DXinitialize();                                       // init direct draw (not D3D... oh, well)
 
-	if (!iWindowMode)                                      // fullscreen mode?
+	if (!iWindowMode)                                  // borderless windows mode?
 		ShowWindow(hWGPU, SW_SHOWMAXIMIZED);           // -> maximize again (fixes strange DX behavior)
 
 	return 1;
@@ -1230,8 +1143,7 @@ void DisplayPic(void)
 #endif
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////
 void ShowGpuPic(void)
 {
 	HRSRC hR; HGLOBAL hG; unsigned long * pRMem;

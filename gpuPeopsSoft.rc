@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include <windows.h>
+#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -123,10 +123,10 @@ CAPTION "Configure the P.E.Op.S. PSX DirectDraw Soft Renderer..."
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Select device...",IDC_SELDEV,7,3,60,12
-    CONTROL         "Fullscreen mode",IDC_DISPMODE1,"Button",BS_AUTORADIOBUTTON,10,28,67,10
+    CONTROL         "Borderless window mode",IDC_DISPMODE1,"Button",BS_AUTORADIOBUTTON,10,28,94,10
     CONTROL         "Window mode",IDC_DISPMODE2,"Button",BS_AUTORADIOBUTTON,10,43,63,10
-    COMBOBOX        IDC_RESOLUTION,78,27,102,64,CBS_DROPDOWNLIST | CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COLDEPTH,225,27,52,64,CBS_DROPDOWNLIST | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_RESOLUTION,105,27,75,64,CBS_DROPDOWNLIST | CBS_SORT | NOT WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COLDEPTH,225,27,52,64,CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_WINX,103,43,36,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_WINY,151,43,36,12,ES_AUTOHSCROLL
     COMBOBOX        IDC_NOSTRETCH,78,61,199,100,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -146,9 +146,9 @@ BEGIN
     CONTROL         "Wait for VSYNC - synchronize screen update with monitor refresh rate",IDC_VSYNC,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,195,256,10
     CONTROL         "Stop screen saver - disables screen savers/power-saving (n.a. in W95/NT4!)",IDC_STOPSAVER,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,206,263,10
+                    "Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,13,206,263,10
     CONTROL         "Debug mode - enables some debugging features (n.a. with all cards)",IDC_DEBUGMODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,217,263,10
+                    "Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,13,217,263,10
     CONTROL         "Activate special game fixes",IDC_GAMEFIX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,228,101,10
     PUSHBUTTON      "...",IDC_SELFIX,121,228,11,10,0,WS_EX_STATICEDGE
     PUSHBUTTON      "...",IDC_RECORDING,121,241,11,10,0,WS_EX_STATICEDGE
@@ -160,7 +160,7 @@ BEGIN
     PUSHBUTTON      "Copy settings\n to clipboard",IDC_CLIPBOARD,210,261,77,26,BS_MULTILINE,WS_EX_STATICEDGE
     LTEXT           "Primary",IDC_DEVICETXT,72,5,211,10
     GROUPBOX        "Resolution && Colors",IDC_STATIC,4,17,283,78
-    RTEXT           "Color depth:",IDC_STATIC,182,28,39,10,SS_CENTERIMAGE | WS_DISABLED
+    RTEXT           "Color depth:",IDC_STATIC,182,28,39,10,SS_CENTERIMAGE | NOT WS_VISIBLE | WS_DISABLED
     RTEXT           "Size:",IDC_STATIC,74,44,26,9
     RTEXT           "Stretching:",IDC_STATIC,26,63,48,9
     RTEXT           "Scanline mode:",IDC_STATIC,9,169,61,8,WS_DISABLED
@@ -472,6 +472,24 @@ END
 /////////////////////////////////////////////////////////////////////////////
 
 
+/////////////////////////////////////////////////////////////////////////////
+// Italian (Italy) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ITA)
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_ICON                PNG                     "res\\Directx.png"
+
+#endif    // Italian (Italy) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -489,7 +507,7 @@ LANGUAGE 9, 1
 #pragma code_page(1252)
 #endif
 #include "res\gpuPeopsSoft.rc2"  // non-Microsoft Visual C++ edited resources
-//#include "afxres.rc"         // Standard components
+#include "afxres.rc"         // Standard components
 #endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
