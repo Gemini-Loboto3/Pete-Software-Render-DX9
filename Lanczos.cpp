@@ -2,6 +2,85 @@
 #include <cmath>
 #include <vector>
 
+#if 0
+class Vec3f
+{
+
+private:
+	float x;
+	float y;
+	float z;
+
+public:
+	Vec3f();
+	// (De)Constructors ---------------------------------------------------------------------------------------
+	Vec3f(float x, float y, float z = 0) : x(x), y(y), z(z) {}
+	Vec3f(float comp[3]) : x(comp[0]), y(comp[1]), z(comp[2]) {}      // TODO: Pass by ref?
+	~Vec3f() {}
+
+	Vec3f(const Vec3f& vec) : x(vec.x), y(vec.y), z(vec.z) {}      // Default compiler copy constructor
+
+	// Operation overloads -----------------------------------------------------------------------------------
+	// We are using inline functions because we can avoid push/pop onto the stack
+	inline Vec3f& operator =(const Vec3f& vec) { x = vec.x; y = vec.y; z = vec.z; return *this; }
+	inline Vec3f& operator +(const Vec3f& vec) { x += vec.x; y += vec.y; z += vec.z; return *this; }
+	inline Vec3f& operator -(const Vec3f& vec) { x -= vec.x; y -= vec.y; z -= vec.z; return *this; }
+	inline Vec3f& operator -() { x = -x; y = -y; z = -z; return *this; }
+	inline Vec3f& operator /=(const float& len) { x /= len; y /= len; z /= len; return *this; }
+	inline Vec3f& operator *=(const float& len) { x *= len; y *= len; z *= len; return *this; }
+	inline Vec3f operator ^(const Vec3f& vec) { return Vec3f(y * vec.z - z * vec.y, z * vec.x - x * vec.z, x * vec.y - y * vec.x); }
+	inline int operator ==(const Vec3f& vec) { return (x == vec.x) && (y == vec.y) && (z == vec.z); }
+	inline float operator *(const Vec3f& vec) { return x * vec.x + y * vec.y + z * vec.z; }
+	friend inline Vec3f operator *(const float& con, const Vec3f& vec) { return Vec3f(vec.x * con, vec.y * con, vec.z * con); }
+};
+
+float bilinear(const float &tx, const float &ty, const Vec3f &c00, const Vec3f &c10, const Vec3f &c01, const Vec3f &c11)
+{
+#if 1
+	float a = c00 * (1 - tx) + c10 * tx;
+	float b = c01 * (1 - tx) + c11 * tx;
+	return a * (1 - ty) + b * ty;
+#else
+	return (1 - tx) * (1 - ty) * c00 + tx * (1 - ty) * c10 + (1 - tx) * ty * c01 + tx * ty * c11;
+#endif
+}
+
+void LinearInterpolation(unsigned char *img, int pitch, int src_w, int src_h, unsigned char *dst, int new_width, int new_height)
+{
+	// testing bilinear interpolation
+	int imageWidth = 512;
+	int gridSizeX = 9, gridSizeY = 9;
+	Vec3f *grid2d = new Vec3f[(gridSizeX + 1) * (gridSizeY + 1)]; // lattices
+	// fill grid with random colors
+	for (int j = 0, k = 0; j <= gridSizeY; ++j)
+	{
+		unsigned char *row = &img[pitch * j];
+		for (int i = 0; i <= gridSizeX; ++i, ++k)
+			grid2d[j * (gridSizeX + 1) + i] = Vec3f(row[0], row[1], row[2]);
+	}
+
+	// now compute our final image using bilinear interpolation
+	Vec3f *imageData = new Vec3f[imageWidth*imageWidth], *pixel = imageData;
+	for (int j = 0; j < imageWidth; ++j)
+	{
+		for (int i = 0; i < imageWidth; ++i)
+		{
+			// convert i,j to grid coordinates
+			float gx = i / float(imageWidth) * gridSizeX; // be careful to interpolate boundaries
+			float gy = j / float(imageWidth) * gridSizeY; // be careful to interpolate boundaries
+			int gxi = int(gx);
+			int gyi = int(gy);
+			const Vec3f & c00 = grid2d[gyi * (gridSizeX + 1) + gxi];
+			const Vec3f & c10 = grid2d[gyi * (gridSizeX + 1) + (gxi + 1)];
+			const Vec3f & c01 = grid2d[(gyi + 1) * (gridSizeX + 1) + gxi];
+			const Vec3f & c11 = grid2d[(gyi + 1) * (gridSizeX + 1) + (gxi + 1)];
+			*(pixel++) = bilinear(gx - gxi, gy - gyi, c00, c10, c01, c11);
+		}
+	}
+	delete[] imageData;
+}
+#endif
+
 double lanczos_size_ = 3.0;
 inline double sinc(double x)
 {

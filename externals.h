@@ -232,7 +232,7 @@ extern short          g_m2;
 extern short          g_m3;
 extern short          DrawSemiTrans;
 extern int            iUseGammaVal;
-extern int            iUseScanLines;
+extern int            iFiltering;
 extern int            iDesktopCol;
 extern int            iUseNoStretchBlt;
 extern int            iShowFPS;

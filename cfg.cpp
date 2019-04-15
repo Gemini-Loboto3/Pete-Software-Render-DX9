@@ -241,9 +241,9 @@ void ReadConfigFile()
 	if (iShowFPS < 0) iShowFPS = 0;
 	if (iShowFPS > 1) iShowFPS = 1;
 
-	GetValue("ScanLines", iUseScanLines);
-	if (iUseScanLines < 0) iUseScanLines = 0;
-	if (iUseScanLines > 1) iUseScanLines = 1;
+	GetValue("Filtering", iFiltering);
+	if (iFiltering < 0) iFiltering = 0;
+	if (iFiltering > 2) iFiltering= 2;
 
 	GetValue("UseFrameLimit", UseFrameLimit);
 	if (UseFrameLimit < 0) UseFrameLimit = 0;
@@ -360,6 +360,7 @@ void ComboBoxAddRes(HWND hWC, char * cs)
 
 BOOL OnInitSoftDialog(HWND hW)
 {
+	extern int iFiltering;
 	HWND hWC; char cs[256]; int i; DEVMODE dv;
 
 	ReadConfig();                                         // read registry stuff
@@ -413,10 +414,9 @@ BOOL OnInitSoftDialog(HWND hW)
 	ComboBox_SetCurSel(hWC, i);
 
 	hWC = GetDlgItem(hW, IDC_SCANLINES);
-	ComboBox_AddString(hWC, "Scanlines disabled");
-	ComboBox_AddString(hWC, "Scanlines enabled (standard)");
-	ComboBox_AddString(hWC, "Scanlines enabled (double blitting - nVidia fix)");
-	ComboBox_SetCurSel(hWC, iUseScanLines);
+	ComboBox_AddString(hWC, "Nearest point");
+	ComboBox_AddString(hWC, "Bilinear filtering");
+	ComboBox_SetCurSel(hWC, iFiltering);
 
 	SetDlgItemInt(hW, IDC_WINX, LOWORD(iWinSize), FALSE);    // window size
 	SetDlgItemInt(hW, IDC_WINY, HIWORD(iWinSize), FALSE);
@@ -439,6 +439,7 @@ BOOL OnInitSoftDialog(HWND hW)
 	ComboBox_AddString(hWC, "1:1 (faster with some cards)");
 	ComboBox_AddString(hWC, "Scale to window size, keep original aspect ratio");
 	ComboBox_AddString(hWC, "Scale to window size, keep 4:3 aspect ratio");
+	ComboBox_AddString(hWC, "Scale to window size, keep 16:9 aspect ratio (for PCSXR-PGXP)");
 	ComboBox_SetCurSel(hWC, iUseNoStretchBlt);
 
 	hWC = GetDlgItem(hW, IDC_DITHER);                        // dithering
@@ -481,7 +482,7 @@ void GetSettings(HWND hW)
 	iColDepth = atol(cs);
 
 	hWC = GetDlgItem(hW, IDC_SCANLINES);                     // scanlines
-	iUseScanLines = ComboBox_GetCurSel(hWC);
+	iFiltering = ComboBox_GetCurSel(hWC);
 
 	i = GetDlgItemInt(hW, IDC_WINX, NULL, FALSE);              // get win size
 	if (i < 50) i = 50; if (i > 20000) i = 20000;
@@ -872,7 +873,7 @@ void ReadConfig(void)
 	dwCfgFixes = 0;
 	iUseFixes = 0;
 	iUseGammaVal = 2048;
-	iUseScanLines = 0;
+	iFiltering = 0;
 	iUseNoStretchBlt = 0;
 	iUseDither = 0;
 	iShowFPS = 0;
@@ -929,8 +930,8 @@ void ReadConfig(void)
 			if (RegQueryValueEx(myKey, "UseFixes", 0, &type, (LPBYTE)&temp, &size) == ERROR_SUCCESS)
 				iUseFixes = (int)temp;
 			size = 4;
-			if (RegQueryValueEx(myKey, "UseScanLines", 0, &type, (LPBYTE)&temp, &size) == ERROR_SUCCESS)
-				iUseScanLines = (int)temp;
+			if (RegQueryValueEx(myKey, "Filtering", 0, &type, (LPBYTE)&temp, &size) == ERROR_SUCCESS)
+				iFiltering = (int)temp;
 			size = 4;
 			if (RegQueryValueEx(myKey, "ShowFPS", 0, &type, (LPBYTE)&temp, &size) == ERROR_SUCCESS)
 				iShowFPS = (int)temp;
@@ -1093,8 +1094,8 @@ void WriteConfig(void)
 	RegSetValueEx(myKey, "CfgFixes", 0, REG_DWORD, (LPBYTE)&temp, sizeof(temp));
 	temp = iUseFixes;
 	RegSetValueEx(myKey, "UseFixes", 0, REG_DWORD, (LPBYTE)&temp, sizeof(temp));
-	temp = iUseScanLines;
-	RegSetValueEx(myKey, "UseScanLines", 0, REG_DWORD, (LPBYTE)&temp, sizeof(temp));
+	temp = iFiltering;
+	RegSetValueEx(myKey, "Filtering", 0, REG_DWORD, (LPBYTE)&temp, sizeof(temp));
 	temp = iShowFPS;
 	RegSetValueEx(myKey, "ShowFPS", 0, REG_DWORD, (LPBYTE)&temp, sizeof(temp));
 	temp = iUseNoStretchBlt;

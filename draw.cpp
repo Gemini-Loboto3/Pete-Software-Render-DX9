@@ -121,7 +121,7 @@ unsigned long  lSetMask = 0;
 int            iDesktopCol = 16;
 int            iShowFPS = 0;
 int            iWinSize;
-int            iUseScanLines = 0;
+int            iFiltering = 0;
 int            iUseNoStretchBlt = 0;
 int            iFastFwd = 0;
 int            iDebugMode = 0;
@@ -525,20 +525,20 @@ void DoBufferSwap(void)		// SWAP BUFFERS
 
 		}
 
-		if (iUseScanLines == 2)                                // stupid nvidia scanline mode
-		{
-			RECT HelperRect = { 0, 0, iResX, iResY };
-
-			WaitVBlank();
-#if !USE_DX9
-			IDirectDrawSurface_Blt(DX.DDSHelper, &HelperRect, DX.DDSRender, &ViewportRect, DDBLT_WAIT, NULL);
-			IDirectDrawSurface_Blt(DX.DDSPrimary, &ScreenRect, DX.DDSHelper, &HelperRect, DDBLT_WAIT, NULL);
-#else
-			//DX.Device->StretchRect(DX.DDSRender, &ViewportRect, DX.DDSHelper,  &HelperRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
-			//DX.Device->StretchRect(DX.DDSHelper, &HelperRect,   DX.DDSPrimary, &ScreenRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
-#endif
-		}
-		else
+//		if (iUseScanLines == 2)                                // stupid nvidia scanline mode
+//		{
+//			RECT HelperRect = { 0, 0, iResX, iResY };
+//
+//			WaitVBlank();
+//#if !USE_DX9
+//			IDirectDrawSurface_Blt(DX.DDSHelper, &HelperRect, DX.DDSRender, &ViewportRect, DDBLT_WAIT, NULL);
+//			IDirectDrawSurface_Blt(DX.DDSPrimary, &ScreenRect, DX.DDSHelper, &HelperRect, DDBLT_WAIT, NULL);
+//#else
+//			//DX.Device->StretchRect(DX.DDSRender, &ViewportRect, DX.DDSHelper,  &HelperRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
+//			//DX.Device->StretchRect(DX.DDSHelper, &HelperRect,   DX.DDSPrimary, &ScreenRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
+//#endif
+//		}
+//		else
 		{
 			WaitVBlank();
 #if !USE_DX9
@@ -571,16 +571,16 @@ void DoBufferSwap(void)		// SWAP BUFFERS
 			}
 		}
 
-		if (iUseScanLines == 2)		// stupid nvidia scanline mode
-		{
-			WaitVBlank();
-		#if !USE_DX9
-			IDirectDrawSurface_Blt(DX.DDSHelper, &ScreenRect, DX.DDSRender, &ViewportRect, DDBLT_WAIT, NULL);
-			IDirectDrawSurface_Blt(DX.DDSPrimary, &ScreenRect, DX.DDSHelper, &ScreenRect, DDBLT_WAIT, NULL);
-		#else
-		#endif
-		}
-		else
+		//if (iUseScanLines == 2)		// stupid nvidia scanline mode
+		//{
+		//	WaitVBlank();
+		//#if !USE_DX9
+		//	IDirectDrawSurface_Blt(DX.DDSHelper, &ScreenRect, DX.DDSRender, &ViewportRect, DDBLT_WAIT, NULL);
+		//	IDirectDrawSurface_Blt(DX.DDSPrimary, &ScreenRect, DX.DDSHelper, &ScreenRect, DDBLT_WAIT, NULL);
+		//#else
+		//#endif
+		//}
+		//else
 		{
 			WaitVBlank();
 		#if !USE_DX9
@@ -886,8 +886,8 @@ unsigned long ulInitDisplay(void)
 		iResX = LOWORD(iWinSize); iResY = HIWORD(iWinSize);
 		ShowWindow(hWGPU, SW_SHOWNORMAL);
 
-		if (iUseScanLines)
-			SetWindowPos(hWGPU, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+		//if (iUseScanLines)
+		//	SetWindowPos(hWGPU, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
 		MoveWindow(hWGPU,                            // -> move wnd
 				   GetSystemMetrics(SM_CXFULLSCREEN) / 2 - iResX / 2,

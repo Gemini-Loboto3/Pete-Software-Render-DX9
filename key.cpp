@@ -84,7 +84,7 @@ LRESULT CALLBACK KeyWndProc(HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
    case WM_ACTIVATE:                                   // some scanline window mode fixing stuff
    case WM_MOVE:
     {
-     if(!iUseScanLines) break;
+     //if(!iFiltering) break;
      if(!iWindowMode)    break;
      if(bIsFirstFrame)  break;
      MoveScanLineArea(hwnd);

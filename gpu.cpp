@@ -380,11 +380,11 @@ char * pGetConfigInfos(int iCfg)
 	strcat(pB, szTxt);
 	//----------------------------------------------------//
 	strcpy(szTxt, "Misc:\r\n- Scanlines: ");
-	if (iUseScanLines == 0) strcat(szTxt, "disabled");
+	if (iFiltering == 0) strcat(szTxt, "point");
 	else
-		if (iUseScanLines == 1) strcat(szTxt, "standard");
+		if (iFiltering == 1) strcat(szTxt, "bilinear");
 		else
-			if (iUseScanLines == 2) strcat(szTxt, "double blitting");
+			if (iFiltering >= 2) strcat(szTxt, "other");
 	strcat(szTxt, "\r\n");
 	strcat(pB, szTxt);
 	sprintf(szTxt, "- Game fixes: %s [%08lx]\r\n", szO[iUseFixes], dwCfgFixes);
@@ -668,6 +668,21 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 	LPDIRECT3DSURFACE9 Back;
 	DX.Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &Back);
 	D3DSURFACE_DESC bdesc;
+	D3DTEXTUREFILTERTYPE d3dFilter;
+
+	switch (iFiltering)
+	{
+	case 0:
+		d3dFilter = D3DTEXF_POINT;
+		break;
+	case 1:
+		d3dFilter = D3DTEXF_LINEAR;
+		break;
+	case 2:
+		d3dFilter = D3DTEXF_GAUSSIANQUAD;
+		break;
+	}
+
 	Back->GetDesc(&bdesc);
 	{
 		extern int iResX, iResY;
@@ -683,7 +698,7 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 			dest.right = iResX;
 			dest.top = 0;
 			dest.bottom = iResY;
-			DX.Device->StretchRect(DX.DDSRender, &rect, Back, NULL, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+			DX.Device->StretchRect(DX.DDSRender, &rect, Back, NULL, d3dFilter);
 			break;
 		case 1:		// 1:1
 			dest.left = (iResX - PSXDisplay.DisplayMode.x) / 2;
@@ -712,7 +727,7 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 				dest.right = dest.left + width;
 				dest.top = (iResY - height) / 2;
 				dest.bottom = dest.top + height;
-				DX.Device->StretchRect(DX.DDSRender, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+				DX.Device->StretchRect(DX.DDSRender, &rect, Back, &dest, d3dFilter);
 			}
 			break;
 		case 3:		// stretch but keep 4:3 aspect
@@ -735,7 +750,30 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 				dest.right = dest.left + width;
 				dest.top = (iResY - height) / 2;
 				dest.bottom = dest.top + height;
-				DX.Device->StretchRect(DX.DDSRender, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+				DX.Device->StretchRect(DX.DDSRender, &rect, Back, &dest, d3dFilter);
+			}
+			break;
+		case 4:		// stretch but keep 16:9 aspect
+			{
+				int width, height;
+				float scalex = (float)iResX / 320.f;
+				float scaley = (float)iResY / 180.f;
+				if (scalex > scaley)
+				{
+					width = scaley * 320.f;
+					height = scaley * 180.f;
+				}
+				else
+				{
+					width = scalex * 320.f;
+					height = scalex * 180.f;
+				}
+
+				dest.left = (iResX - width) / 2;
+				dest.right = dest.left + width;
+				dest.top = (iResY - height) / 2;
+				dest.bottom = dest.top + height;
+				DX.Device->StretchRect(DX.DDSRender, &rect, Back, &dest, d3dFilter);
 			}
 			break;
 		}
