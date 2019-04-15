@@ -6,6 +6,8 @@
 #define IDS_INFO1                       2
 #define IDS_INFO2                       3
 #define IDC_DEFAULT                     3
+#define IDS_STRING4                     4
+#define IDS_INFO3                       4
 #define IDC_DEF1                        127
 #define IDC_DEF2                        128
 #define IDD_DEVICE                      133

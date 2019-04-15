@@ -85,9 +85,9 @@ void InitMenu(void)
 		ANSI_CHARSET, OUT_DEFAULT_PRECIS,
 		CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH,
-		//"Courier New");
+		"Segoe UI");
 		//"MS Sans Serif");
-		"Arial");
+		//"Arial");
 #endif
 }
 
@@ -114,16 +114,12 @@ extern time_t tStart;
 
 int iMPos = 0;                                           // menu arrow pos
 
-void DisplayText(void)                                 // DISPLAY TEXT
+void DisplayText(LPDIRECT3DSURFACE9 Surface)             // DISPLAY TEXT
 {
 #ifdef _WINDOWS
 	HDC hdc; HFONT hFO;
 
-#if !USE_DX9
-	IDirectDrawSurface_GetDC(DX.DDSRender, &hdc);
-#else
-	DX.DDSRender->GetDC(&hdc);
-#endif
+	Surface->GetDC(&hdc);
 	hFO = (HFONT)SelectObject(hdc, hGFont);
 
 	SetTextColor(hdc, RGB(0, 255, 0));
@@ -144,11 +140,7 @@ void DisplayText(void)                                 // DISPLAY TEXT
 	}
 
 	SelectObject(hdc, hFO);
-#if !USE_DX9
-	IDirectDrawSurface_ReleaseDC(DX.DDSRender, hdc);
-#else
-	DX.DDSRender->ReleaseDC(hdc);
-#endif
+	Surface->ReleaseDC(hdc);
 #endif
 }
 

@@ -274,37 +274,14 @@ void BlitScreen32(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR 
 ////////////////////////////////////////////////////////////////////////
 void DoClearScreenBuffer(void)                         // CLEAR DX BUFFER
 {
-#if !USE_DX9
-	DDBLTFX     ddbltfx;
-
-	ddbltfx.dwSize = sizeof(ddbltfx);
-	ddbltfx.dwFillColor = 0x00000000;
-
-	IDirectDrawSurface_Blt(DX.DDSRender, NULL, NULL, NULL, DDBLT_COLORFILL, &ddbltfx);
-
-	if (iUseNoStretchBlt >= 3)
-	{
-		if (pSaISmallBuff) memset(pSaISmallBuff, 0, 512 * 512 * 4);
-	}
-#else
 	DX.Device->ColorFill(DX.DDSRender, NULL, D3DCOLOR_XRGB(0, 0, 0));
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 void DoClearFrontBuffer(void)                         // CLEAR PRIMARY BUFFER
 {
-#if !USE_DX9
-	DDBLTFX     ddbltfx;
-
-	ddbltfx.dwSize = sizeof(ddbltfx);
-	ddbltfx.dwFillColor = 0x00000000;
-
-	IDirectDrawSurface_Blt(DX.DDSPrimary, NULL, NULL, NULL, DDBLT_COLORFILL, &ddbltfx);
-#else
-	DX.Device->ColorFill(DX.DDSRender/*DX.DDSPrimary*/, NULL, D3DCOLOR_XRGB(0, 0, 0));
-#endif
+	DX.Device->ColorFill(DX.DDSRender, NULL, D3DCOLOR_XRGB(0, 0, 0));
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -472,21 +449,6 @@ void ShowGunCursor(unsigned char * surf)
 void DoBufferSwap(void)		// SWAP BUFFERS
 {							// (we don't swap... we blit only)
 	long x, y;
-#if !USE_DX9
-	HRESULT ddrval;
-	ddrval = IDirectDrawSurface_Lock(DX.DDSRender, NULL, &ddsd, DDLOCK_WAIT | DDLOCK_WRITEONLY, NULL);
-
-	if (ddrval == DDERR_SURFACELOST)
-	{
-		IDirectDrawSurface_Restore(DX.DDSRender);
-	}
-
-	if (ddrval != DD_OK)
-	{
-		IDirectDrawSurface_Unlock(DX.DDSRender, &ddsd);
-		return;
-	}
-#else
 	D3DLOCKED_RECT Rect;
 	if (FAILED(DX.DDSRender->LockRect(&Rect, NULL, D3DLOCK_DONOTWAIT | D3DLOCK_DISCARD)))
 	{
@@ -494,7 +456,6 @@ void DoBufferSwap(void)		// SWAP BUFFERS
 		return;
 	}
 	DX.DDSRender->GetDesc(&ddsd);
-#endif
 
 	//----------------------------------------------------//
 
@@ -513,7 +474,7 @@ void DoBufferSwap(void)		// SWAP BUFFERS
 	DX.DDSRender->UnlockRect();
 #endif
 
-	if (ulKeybits & KEY_SHOWFPS) DisplayText();              // paint menu text
+	//if (ulKeybits & KEY_SHOWFPS) DisplayText();              // paint menu text
 
 	//if (pExtraBltFunc)
 	//{
@@ -799,8 +760,8 @@ int DXinitialize()
 	}
 
 	//////////////////////////////////////////////////////// main surfaces
-	//DX.Device->CreateRenderTarget(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight,
-	//	DX.d3ddm.Format, D3DMULTISAMPLE_NONE, 0, TRUE, &DX.DDSPrimary, NULL);
+	DX.Device->CreateRenderTarget(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight,
+		DX.d3ddm.Format, D3DMULTISAMPLE_NONE, 0, TRUE, &DX.DDSCopy, NULL);
 
 	//----------------------------------------------------//
 	if (FAILED(DX.Device->CreateOffscreenPlainSurface(1024, 512, DX.d3ddm.Format, D3DPOOL_DEFAULT, &DX.DDSRender, NULL)))

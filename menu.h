@@ -27,7 +27,7 @@
 #ifndef _GPU_MENU_H_
 #define _GPU_MENU_H_
 
-void DisplayText(void);
+void DisplayText(LPDIRECT3DSURFACE9 Surface);
 void CloseMenu(void);
 void InitMenu(void);
 void BuildDispMenu(int iInc);

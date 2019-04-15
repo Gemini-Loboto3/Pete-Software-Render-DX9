@@ -134,6 +134,7 @@ typedef struct SDXTAG
 	D3DDISPLAYMODE		    d3ddm;
 	D3DPRESENT_PARAMETERS   D3Dpp;
 	LPDIRECT3DSURFACE9		DDSRender,		// target surface
+		DDSCopy,		// helper surface to displa text
 		DDSScreenPic;	// native resolution surface, this is blit to the helper and then to the primary surface
 #endif
 	HWND                    hWnd;

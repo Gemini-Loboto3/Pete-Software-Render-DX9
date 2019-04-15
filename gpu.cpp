@@ -736,17 +736,26 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 				dest.top = (iResY - height) / 2;
 				dest.bottom = dest.top + height;
 				DX.Device->StretchRect(DX.DDSRender, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
-				if (DX.DDSScreenPic)
-				{
-					RECT rect, dest;
-					SetRect(&rect, 0, 0, 128, 96);
-					SetRect(&dest, bdesc.Width - 128, 0, bdesc.Width, 96);
-					DX.Device->StretchRect(DX.DDSScreenPic, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
-				}
 			}
 			break;
 		}
 	}
+
+	if (DX.DDSScreenPic)
+	{
+		RECT rect, dest;
+		SetRect(&rect, 0, 0, 128, 96);
+		SetRect(&dest, bdesc.Width - 128, 0, bdesc.Width, 96);
+		DX.Device->StretchRect(DX.DDSScreenPic, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
+	}
+
+	if (ulKeybits & KEY_SHOWFPS)
+	{
+		DX.Device->StretchRect(Back, NULL, DX.DDSCopy, NULL, D3DTEXF_NONE);
+		DisplayText(DX.DDSCopy);              // paint menu text
+		DX.Device->StretchRect(DX.DDSCopy, NULL, Back, NULL, D3DTEXF_NONE);
+	}
+
 	DX.Device->EndScene();
 	DX.Device->Present(NULL, NULL, NULL, NULL);
 

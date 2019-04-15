@@ -463,9 +463,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO0               "FL - Frame limitation:\n[Off] - Speed as fast as possible\n[On-1] - Limits speed to manual value\n[On-2] - Limits speed to auto-detected value."
-    IDS_INFO1               "FS - Frame skipping:\n[Off] - No frames get skipped\n[On] - Tries to speed up the game by skipping frames. Can cause glitches!"
-    IDS_INFO2               "GF - Special game fixes:\n[Off] - Turn off all fixes\n[On] - Turn on all activated fixes. You have to select the fixes you want to use in the gpu config."
+    IDS_INFO0               "FL - Frame limitation:\n[Off] - Speed as fast as possible.\n[On-1] - Limits speed to manual value.\n[On-2] - Limits speed to auto-detected value."
+    IDS_INFO1               "FS - Frame skipping:\n[Off] - No frames get skipped.\n[On] - Tries to speed up the game by skipping frames. Can cause glitches!"
+    IDS_INFO2               "DI - Dithering:\n[Off] No dithering.\n[On-1] Only dithered polygons are displayed as such.\n[On-2] Dithering is always enabled."
+    IDS_INFO3               "GF - Special game fixes:\n[Off] - Turn off all fixes.\n[On] - Turn on all activated fixes. Select the fixes you want to use in the gpu config."
 END
 
 #endif    // English (United States) resources
