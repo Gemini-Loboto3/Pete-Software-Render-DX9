@@ -107,9 +107,9 @@ LRESULT CALLBACK KeyWndProc(HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
       {
        if(ulKeybits&KEY_SHOWFPS)
         {
-         DestroyPic();
+         //DestroyPic();
          ulKeybits&=~KEY_SHOWFPS;
-         DoClearScreenBuffer();
+         //DoClearScreenBuffer();
         }
        else
         {

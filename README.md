@@ -13,6 +13,5 @@ This new edition of the Pete Op.S. Software Driver adds a few features of its ow
 * All the old CPU-based upscale algorithms have been dropped entirely, not only because they are fundamentally slower, but because they can be done identically by using shaders. While these shaders haven't been implemented, one could use a more general approach like ReShader to achieve similar if not better effects, with way better performance stability too since these effects would be performed entirely on the GPU which is more capable than the CPU to process images.
 * Fullscreen mode has been dropped replaced with a borderless window mode.
 
-## Intended updates
-* Add a mode to select screen display filtering.
-* Drop the deprecated Video For Windows record module. There are better external alternatives such as OBS, which can also record audio and are generally faster.
+## Possible updates
+* Drop the deprecated Video For Windows record module or replace it with a more modern capture method. There are better external alternatives such as OBS, which can also record audio, are generally faster, and have support for better compression such as NVENC.

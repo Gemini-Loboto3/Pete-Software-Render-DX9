@@ -45,7 +45,7 @@ static FPSEWin32About info =
     VERSION >> 8,
     FPSE_OK, 
     "Pete Bernert and the P.E.Op.S. team",
-    "GPU P.E.Op.S",
+    "GPU Pete's Soft",
     "That GPU plugin is the result of some hacks on the Peops X11 plugin.\x00d\x00a"
     "If you have some question or you've found a bug send an email to:\x00d\x00a"
     "<lu_zero@brsk.virtualave.net>\x00d\x00a"

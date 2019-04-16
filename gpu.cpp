@@ -153,7 +153,7 @@ const  unsigned char revision = 1;
 const  unsigned char build = 18;   // increase that with each version
 
 #ifdef _WINDOWS
-static char *libraryName = "P.E.Op.S. Soft Driver DX9";
+static char *libraryName = "Pete's Soft Driver";
 #else
 #ifndef _SDL
 static char *libraryName = "P.E.Op.S. SoftX Driver";
@@ -164,7 +164,7 @@ static char *libraryInfo = "P.E.Op.S. SoftSDL Driver V1.18\nCoded by Pete Berner
 #endif
 #endif
 
-static char *PluginAuthor = "Pete Bernert and the P.E.Op.S. team";
+static char *PluginAuthor = "Pete Bernert, the P.E.Op.S. team, and Gemini";
 
 ////////////////////////////////////////////////////////////////////////
 // memory image of the PSX vram 
@@ -606,7 +606,7 @@ long CALLBACK GPUshutdown()                            // GPU SHUTDOWN
 void updateDisplay(void)                               // UPDATE DISPLAY
 {
 	//DX.Device->SetRenderTarget(0, DX.DDSPrimary);
-	DX.Device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.f, 0);
+	DX.Device->Clear(0, NULL, D3DCLEAR_TARGET /*| D3DCLEAR_ZBUFFER*/, D3DCOLOR_XRGB(0, 0, 0), 1.f, 0);
 	DX.Device->BeginScene();
 
 	if (PSXDisplay.Disabled)	// disable?

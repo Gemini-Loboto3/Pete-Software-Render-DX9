@@ -281,7 +281,8 @@ void DoClearScreenBuffer(void)                         // CLEAR DX BUFFER
 
 void DoClearFrontBuffer(void)                         // CLEAR PRIMARY BUFFER
 {
-	DX.Device->ColorFill(DX.DDSRender, NULL, D3DCOLOR_XRGB(0, 0, 0));
+	//DX.Device->ColorFill(DX.DDSRender, NULL, D3DCOLOR_XRGB(0, 0, 0));
+	DX.Device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////
