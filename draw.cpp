@@ -713,7 +713,7 @@ int DXinitialize()
 	}
 
 	HRESULT hr;
-	D3DFORMAT depth_fmt = D3DFMT_D32F_LOCKABLE;
+	D3DFORMAT depth_fmt = D3DFMT_D16;
 	if (FAILED(hr = DX.DD->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, DX.d3ddm.Format,
 													 D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, depth_fmt)))
 	{
