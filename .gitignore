@@ -301,3 +301,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 /old
+/DLL
+/Release AVX
+/Release AVX2/gpuPeopsSoftDX.tlog
+/Release SSE
+/Release SSE2

@@ -225,7 +225,7 @@ D3DCOLOR ClutToBGR(unsigned short lu)
 		g = (lu >> 5) & 0x1f;  g <<= 3;
 		b = (lu >> 10) & 0x1f; b <<= 3;
 	}
-	return D3DCOLOR_XBGR(b, g, r, 0xff);
+	return D3DCOLOR_XBGR(b, g, r);
 }
 
 void BlitScreenRGB(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR MODE

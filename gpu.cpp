@@ -152,17 +152,26 @@ const  unsigned char version = 1;    // do not touch - library for PSEmu 1.x
 const  unsigned char revision = 1;
 const  unsigned char build = 18;   // increase that with each version
 
-#ifdef _WINDOWS
+#ifdef __AVX2__
+//AVX2
+static char *libraryName = "Pete's Soft Driver (AVX2)";
+#elif defined ( __AVX__ )
+//AVX
+static char *libraryName = "Pete's Soft Driver (AVX)";
+#elif (defined(_M_AMD64) || defined(_M_X64))
+//SSE2 x64
+static char *libraryName = "Pete's Soft Driver (SSE2 x64)";
+#elif _M_IX86_FP == 2
+//SSE2 x32
+static char *libraryName = "Pete's Soft Driver (SSE2)";
+#elif _M_IX86_FP == 1
+//SSE x32
+static char *libraryName = "Pete's Soft Driver (SSE)";
+#else
+//nothing
 static char *libraryName = "Pete's Soft Driver";
-#else
-#ifndef _SDL
-static char *libraryName = "P.E.Op.S. SoftX Driver";
-static char *libraryInfo = "P.E.Op.S. SoftX Driver V1.18\nCoded by Pete Bernert and the P.E.Op.S. team\n";
-#else
-static char *libraryName = "P.E.Op.S. SoftSDL Driver";
-static char *libraryInfo = "P.E.Op.S. SoftSDL Driver V1.18\nCoded by Pete Bernert and the P.E.Op.S. team\n";
 #endif
-#endif
+
 
 static char *PluginAuthor = "Pete Bernert, the P.E.Op.S. team, and Gemini";
 
@@ -1801,11 +1810,17 @@ void CALLBACK GPUabout(void)                           // ABOUT
 ////////////////////////////////////////////////////////////////////////
 // We are ever fine ;)
 ////////////////////////////////////////////////////////////////////////
+extern int Test_instruction_set();
 
 long CALLBACK GPUtest(void)
 {
+//#ifdef NDEBUG
 	// if test fails this function should return negative value for error (unable to continue)
 	// and positive value for warning (can continue but output might be crappy)
+	if (!Test_instruction_set())
+		return -1;
+//#endif
+
 	return 0;
 }
 
