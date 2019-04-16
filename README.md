@@ -7,11 +7,13 @@ If you loved this plugin back in the day, you would know what it is capable of a
 ## What was improved from the original?
 This new edition of the Pete Op.S. Software Driver adds a few features of its own that make visual rendintion a bit better in general.
 * Stretch mode would stretch the image by maintaining aspect ratio was fundamentally broken for games using a hi-res non-interlaced mode, resulting in the image not filling a portion of screen that it was intended to take care of. This was fixed by adding a forced 4:3 aspect ratio whenever the uses chooses to do so. The original ratio option is still there if one wanted to use it anyway.
+* Similarly to the 4:3 forced aspect ratio, a 16:9 aspect ratio has also been added. This is to be used with PCSXR-PGXP and its hack to force rendering with a wide screen size.
 * Rewritten the code that takes screenshots. Now it captures only what's on screen at native resolution, with no overlay elements, and in PNG for glorious compression.
 
 ## What was dropped in the process?
-* All the old CPU-based upscale algorithms have been dropped entirely, not only because they are fundamentally slower, but because they can be done identically by using shaders. While these shaders haven't been implemented, one could use a more general approach like ReShader to achieve similar if not better effects, with way better performance stability too since these effects would be performed entirely on the GPU which is more capable than the CPU to process images.
-* Fullscreen mode has been dropped replaced with a borderless window mode.
+* All the old CPU-based upscale algorithms have been dropped entirely, not only because they are fundamentally slower, but because they can be done identically by using shaders. While these shaders haven't been implemented, one could use a more general approach like ReShade to achieve similar if not better effects, with way better performance stability too, since these effects would be performed entirely on the GPU, which is more capable than the CPU to process images.
+* Fullscreen mode has been replaced with a borderless window mode.
 
 ## Possible updates
 * Drop the deprecated Video For Windows record module or replace it with a more modern capture method. There are better external alternatives such as OBS, which can also record audio, are generally faster, and have support for better compression such as NVENC.
+* Replace software rendering with the one in pSX, which renders dithering a tad better and is also faster.
