@@ -856,6 +856,9 @@ int DXinitialize()
 		return 0;
 	}
 
+	DX.Scaler = &ScalingEffect(DX.Device);
+	DX.Scaler->LoadEffect("plugins\\sshaders\\2xSaI.fx");
+
 	//////////////////////////////////////////////////////// main surfaces
 	if (FAILED(DX.Device->CreateRenderTarget(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, DX.d3ddm.Format, D3DMULTISAMPLE_NONE, 0, TRUE, &DX.DDSCopy, NULL)))
 	{
@@ -864,7 +867,11 @@ int DXinitialize()
 	}
 
 	//----------------------------------------------------//
+#if 0
 	if (FAILED(DX.Device->CreateOffscreenPlainSurface(1024, 512, DX.d3ddm.Format, D3DPOOL_DEFAULT, &DX.DDSRender, NULL)))
+#else
+	if (FAILED(DX.Device->CreateRenderTarget(1024, 512, DX.d3ddm.Format, D3DMULTISAMPLE_NONE, 0, TRUE, &DX.DDSRender, NULL)))
+#endif
 	{
 		MessageBox(NULL, "DirectX failed: CreateOffscreenPlainSurface", "Error", MB_OK);
 		return 0;

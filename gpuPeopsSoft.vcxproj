@@ -84,6 +84,8 @@
     <OutDir>.\Debug\</OutDir>
     <IntDir>.\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(DXSDK_DIR)Include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(DXSDK_DIR)Lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
@@ -147,7 +149,7 @@
       <SubSystem>Windows</SubSystem>
       <OutputFile>D:\ePSXe150\plugins\gpuPeopsSoftDX.dll</OutputFile>
       <ImportLibrary>.\Debug\gpuPeopsSoft.lib</ImportLibrary>
-      <AdditionalDependencies>D3D9.lib;winmm.lib;vfw32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>D3D9.lib;d3dx9.lib;winmm.lib;vfw32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\gpuPeopsSoft.def</ModuleDefinitionFile>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
@@ -353,6 +355,9 @@
     <ClCompile Include="draw.cpp">
       <DeploymentContent>true</DeploymentContent>
     </ClCompile>
+    <ClCompile Include="filter\hq2x.cpp" />
+    <ClCompile Include="filter\interp.cpp" />
+    <ClCompile Include="filter\ScalingEffect.cpp" />
     <ClCompile Include="fps.cpp" />
     <ClCompile Include="fpsewp.cpp" />
     <ClCompile Include="gpu.cpp">
@@ -377,6 +382,10 @@
     <ClInclude Include="cfg.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="externals.h" />
+    <ClInclude Include="filter\hq2x.h" />
+    <ClInclude Include="filter\interp.h" />
+    <ClInclude Include="filter\ScalingEffect.h" />
+    <ClInclude Include="filter\tdef.h" />
     <ClInclude Include="fps.h" />
     <ClInclude Include="fpsewp.h" />
     <ClInclude Include="gpu.h" />
@@ -402,6 +411,9 @@
     <Text Include="changelog.txt" />
     <Text Include="filemap.txt" />
     <Text Include="license.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="filter\hq2x.dat" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

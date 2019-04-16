@@ -42,6 +42,7 @@
   // - generic cleanup for the Peops release
   //
   //*************************************************************************// 
+#include "filter\ScalingEffect.h"
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -136,6 +137,8 @@ typedef struct SDXTAG
 	LPDIRECT3DSURFACE9		DDSRender,		// target surface
 		DDSCopy,		// helper surface to displa text
 		DDSScreenPic;	// native resolution surface, this is blit to the helper and then to the primary surface
+	ScalingEffect			*Scaler;		// applies shader effects
+	LPDIRECT3DTEXTURE9		DDTRender;
 #endif
 	HWND                    hWnd;
 } sDX;

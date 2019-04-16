@@ -416,6 +416,7 @@ BOOL OnInitSoftDialog(HWND hW)
 	hWC = GetDlgItem(hW, IDC_SCANLINES);
 	ComboBox_AddString(hWC, "Nearest point");
 	ComboBox_AddString(hWC, "Bilinear filtering");
+	ComboBox_AddString(hWC, "Test");
 	ComboBox_SetCurSel(hWC, iFiltering);
 
 	SetDlgItemInt(hW, IDC_WINX, LOWORD(iWinSize), FALSE);    // window size

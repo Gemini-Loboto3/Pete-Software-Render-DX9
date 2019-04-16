@@ -16,6 +16,9 @@
     <Filter Include="Documentation Files">
       <UniqueIdentifier>{85a84c5b-fcc3-4be9-a823-ed6c574a0326}</UniqueIdentifier>
     </Filter>
+    <Filter Include="filters">
+      <UniqueIdentifier>{626cab21-78f9-4a69-8aaf-26c64265a04c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cfg.cpp">
@@ -62,6 +65,15 @@
     </ClCompile>
     <ClCompile Include="test_case.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filter\hq2x.cpp">
+      <Filter>filters</Filter>
+    </ClCompile>
+    <ClCompile Include="filter\interp.cpp">
+      <Filter>filters</Filter>
+    </ClCompile>
+    <ClCompile Include="filter\ScalingEffect.cpp">
+      <Filter>filters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -113,6 +125,18 @@
     <ClInclude Include="Lanczos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="filter\interp.h">
+      <Filter>filters</Filter>
+    </ClInclude>
+    <ClInclude Include="filter\hq2x.h">
+      <Filter>filters</Filter>
+    </ClInclude>
+    <ClInclude Include="filter\tdef.h">
+      <Filter>filters</Filter>
+    </ClInclude>
+    <ClInclude Include="filter\ScalingEffect.h">
+      <Filter>filters</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\gpu.bmp">
@@ -143,5 +167,10 @@
     <CustomBuild Include="res\gpuPeopsSoft.rc2">
       <Filter>Resource Files</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="filter\hq2x.dat">
+      <Filter>filters</Filter>
+    </None>
   </ItemGroup>
 </Project>

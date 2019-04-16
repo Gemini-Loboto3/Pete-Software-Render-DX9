@@ -612,6 +612,55 @@ long CALLBACK GPUshutdown()                            // GPU SHUTDOWN
 ////////////////////////////////////////////////////////////////////////
 // Update display (swap buffers)
 ////////////////////////////////////////////////////////////////////////
+#include "filter\hq2x.h"
+HRESULT CreateTextureFromSurface(LPDIRECT3DSURFACE9 pSurface, RECT* pSrcRect, RECT* pDestRect, LPDIRECT3DTEXTURE9* ppTexture)
+{
+	int width, height;
+	RECT Src;
+	D3DSURFACE_DESC surfDesc;
+	pSurface->GetDesc(&surfDesc);
+	if (!pSrcRect)
+	{
+		width = surfDesc.Width;
+		height = surfDesc.Height;
+		Src.left = Src.top = 0;
+		Src.right = width;
+		Src.bottom = height;
+	}
+	else
+	{
+		width = pSrcRect->right - pSrcRect->left; // + 1;
+		height = pSrcRect->bottom - pSrcRect->top; // + 1;
+		Src = *pSrcRect;
+	}
+
+	D3DXCreateTexture(DX.Device, width, height, 1, 0, surfDesc.Format, D3DPOOL_DEFAULT, ppTexture);
+
+	// Retrieve the surface image of the texture.
+	LPDIRECT3DSURFACE9 pTexSurface;
+	LPDIRECT3DTEXTURE9 pTexture = *ppTexture;
+	pTexture->GetLevelDesc(0, &surfDesc);
+	pTexture->GetSurfaceLevel(0, &pTexSurface);
+
+	// Create a clean surface to clear the texture with.
+	LPDIRECT3DSURFACE9 pCleanSurface;
+	D3DLOCKED_RECT lockRect;
+	DX.Device->CreateOffscreenPlainSurface(surfDesc.Width, surfDesc.Height, surfDesc.Format, D3DPOOL_DEFAULT, &pCleanSurface, NULL);
+	pCleanSurface->LockRect(&lockRect, NULL, 0);
+	memset((BYTE*)lockRect.pBits, 0, surfDesc.Height * lockRect.Pitch);
+	pCleanSurface->UnlockRect();
+
+	DX.Device->StretchRect(pCleanSurface, NULL, pTexSurface, NULL, D3DTEXF_NONE);
+	pCleanSurface->Release();
+
+	// Copy the image to the texture.
+	POINT destPoint = { 0, 0 };
+	DX.Device->StretchRect(pSurface, &Src, pTexSurface, NULL, D3DTEXF_NONE);
+	pTexSurface->Release();
+
+	return S_OK;
+}
+
 void updateDisplay(void)                               // UPDATE DISPLAY
 {
 	//DX.Device->SetRenderTarget(0, DX.DDSPrimary);
@@ -688,7 +737,12 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 		d3dFilter = D3DTEXF_LINEAR;
 		break;
 	case 2:
-		d3dFilter = D3DTEXF_GAUSSIANQUAD;
+		{
+			CreateTextureFromSurface(DX.DDSRender, NULL, NULL, &DX.DDTRender);
+			D3DXSaveTextureToFile("test.png", D3DXIMAGE_FILEFORMAT::D3DXIFF_PNG, DX.DDTRender, NULL);
+			DX.DDTRender->Release();
+			d3dFilter = D3DTEXF_LINEAR;
+		}
 		break;
 	}
 
@@ -788,6 +842,7 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 		}
 	}
 
+	// display hud picture
 	if (DX.DDSScreenPic)
 	{
 		RECT rect, dest;
@@ -795,7 +850,7 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 		SetRect(&dest, bdesc.Width - 128, 0, bdesc.Width, 96);
 		DX.Device->StretchRect(DX.DDSScreenPic, &rect, Back, &dest, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
 	}
-
+	// display extra text
 	if (ulKeybits & KEY_SHOWFPS)
 	{
 		DX.Device->StretchRect(Back, NULL, DX.DDSCopy, NULL, D3DTEXF_NONE);
@@ -2146,7 +2201,9 @@ void PaintPicDot(unsigned char * p, unsigned char c)
 // so you have to use the frontbuffer to get a fully
 // rendered picture
 extern sDX DX;
+#if 0
 #include "Lanczos.h"
+#endif
 
 void CALLBACK GPUgetScreenPic(unsigned char * pMem)
 {
@@ -2164,26 +2221,33 @@ void CALLBACK GPUgetScreenPic(unsigned char * pMem)
 	rt.top = 0;  rt.bottom = 96;
 
 	D3DLOCKED_RECT Rect;
+
+#if 0
 	DX.DDSRender->LockRect(&Rect, NULL, D3DLOCK_READONLY);
-
 	ResizeLanczos((unsigned char*)Rect.pBits, Rect.Pitch, r.right, r.bottom, pMem, 128, 96);
-
-	//pf = pMem;
-	//unsigned char *ps = (unsigned char *)Rect.pBits;
-
-	//for (y = 0; y < 96; y++)
-	//{
-	//	unsigned char *row = &ps[Rect.Pitch * y];
-	//	for (x = 0; x < 128; x++, row += 4)
-	//	{
-	//		*(pf + 0) = (unsigned char)((row[2] & 0xff));
-	//		*(pf + 1) = (unsigned char)((row[1] & 0xff00) >> 8);
-	//		*(pf + 2) = (unsigned char)((row[0] & 0xff0000) >> 16);
-	//		pf += 3;
-	//	}
-	//}
-
 	DX.DDSRender->UnlockRect();
+#else
+	int i;
+	if(FAILED(DX.Device->StretchRect(DX.DDSRender, &r, DX.DDSCopy, &rt, D3DTEXF_LINEAR)))
+	   i = 0;
+	if(FAILED(DX.DDSCopy->LockRect(&Rect, &rt, D3DLOCK_READONLY)))
+	   i = 1;
+	pf = pMem;
+	unsigned char *ps = (unsigned char *)Rect.pBits;
+
+	for (y = 0; y < 96; y++)
+	{
+		unsigned char *row = &ps[Rect.Pitch * y * 4];
+		for (x = 0; x < 128; x++, row += 4)
+		{
+			*(pf + 0) = row[0];
+			*(pf + 1) = row[1];
+			*(pf + 2) = row[2];
+			pf += 3;
+		}
+	}
+	DX.DDSCopy->UnlockRect();
+#endif
 
 	/////////////////////////////////////////////////////////////////////
 	// generic number/border painter
