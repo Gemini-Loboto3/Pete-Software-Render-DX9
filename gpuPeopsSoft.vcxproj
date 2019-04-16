@@ -94,6 +94,7 @@
       <ImportLibrary>.\Debug\gpuPeopsSoft.lib</ImportLibrary>
       <AdditionalDependencies>D3D9.lib;winmm.lib;vfw32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\gpuPeopsSoft.def</ModuleDefinitionFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

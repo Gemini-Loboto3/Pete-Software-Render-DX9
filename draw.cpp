@@ -185,7 +185,50 @@ static __inline void WaitVBlank(void)
 }
 
 ////////////////////////////////////////////////////////////////////////
-void BlitScreen32(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR MODE
+int iColorMode = 0;
+#define D3DCOLOR_XBGR(b, g, r)		((r) | ((g)<<8) | ((b)<<8) | 0xff000000)
+
+D3DCOLOR ClutToRGB(unsigned short lu)
+{
+	int r, g, b;
+	// RGB555 conversion
+	if (iColorMode == 0)
+	{
+		r = lu & 0x1f;         r = (r << 3) | (r >> 2);
+		g = (lu >> 5) & 0x1f;  g = (g << 3) | (g >> 2);
+		b = (lu >> 10) & 0x1f; b = (b << 3) | (b >> 2);
+	}
+	// RGB888 conversion
+	else
+	{
+		r = lu & 0x1f;         r <<= 3;
+		g = (lu >> 5) & 0x1f;  g <<= 3;
+		b = (lu >> 10) & 0x1f; b <<= 3;
+	}
+	return D3DCOLOR_XRGB(r, g, b);
+}
+
+D3DCOLOR ClutToBGR(unsigned short lu)
+{
+	int r, g, b;
+	// RGB555 conversion
+	if (iColorMode == 0)
+	{
+		r = lu & 0x1f;         r = (r << 3) | (r >> 2);
+		g = (lu >> 5) & 0x1f;  g = (g << 3) | (g >> 2);
+		b = (lu >> 10) & 0x1f; b = (b << 3) | (b >> 2);
+	}
+	// RGB888 conversion
+	else
+	{
+		r = lu & 0x1f;         r <<= 3;
+		g = (lu >> 5) & 0x1f;  g <<= 3;
+		b = (lu >> 10) & 0x1f; b <<= 3;
+	}
+	return D3DCOLOR_XBGR(b, g, r, 0xff);
+}
+
+void BlitScreenRGB(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR MODE
 {
 	unsigned char * pD; unsigned long lu; unsigned short s;
 	unsigned int startxy;
@@ -264,8 +307,93 @@ void BlitScreen32(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR 
 			for (row = 0; row < dx; row++)
 			{
 				s = psxVuw[startxy++];
+				*((unsigned long *)((surf)+(column*ddsd.Width * 4) + row * 4)) = ClutToRGB(s);
+					//((((s << 19) & 0xf80000) | ((s << 6) & 0xf800) | ((s >> 7) & 0xf8)) & 0xffffff) | 0xff000000;
+			}
+		}
+	}
+}
+
+void BlitScreenBGR(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR MODE
+{
+	unsigned char * pD; unsigned long lu; unsigned short s;
+	unsigned int startxy;
+	short row, column;
+	short dx = (short)PreviousPSXDisplay.Range.x1;
+	short dy = (short)PreviousPSXDisplay.DisplayMode.y;
+
+	if (iDebugMode && iFVDisplay)
+	{
+		dx = 1024;
+		dy = iGPUHeight;
+		x = 0; y = 0;
+
+		for (column = 0; column < dy; column++)
+		{
+			startxy = ((1024)*(column + y)) + x;
+			for (row = 0; row < dx; row++)
+			{
+				s = psxVuw[startxy++];
 				*((unsigned long *)((surf)+(column*ddsd.Width * 4) + row * 4)) =
 					((((s << 19) & 0xf80000) | ((s << 6) & 0xf800) | ((s >> 7) & 0xf8)) & 0xffffff) | 0xff000000;
+			}
+		}
+		return;
+	}
+
+
+	if (PreviousPSXDisplay.Range.y0)	// centering needed?
+	{
+		surf += PreviousPSXDisplay.Range.y0*ddsd.Width * 4;
+		dy -= PreviousPSXDisplay.Range.y0;
+	}
+
+	surf += PreviousPSXDisplay.Range.x0 << 2;
+
+	if (PSXDisplay.RGB24)
+	{
+		if (iFPSEInterface)
+		{
+			for (column = 0; column < dy; column++)
+			{
+				startxy = ((1024)*(column + y)) + x;
+				pD = (unsigned char *)&psxVuw[startxy];
+
+				for (row = 0; row < dx; row++)
+				{
+					lu = *((unsigned long *)pD);
+					*((unsigned long *)((surf)+(column*ddsd.Width * 4) + row * 4)) =
+						0xff000000 | (BLUE(lu)) | (GREEN(lu) << 8) | (RED(lu) << 16);
+					pD += 3;
+				}
+			}
+		}
+		else
+		{
+			for (column = 0; column < dy; column++)
+			{
+				startxy = ((1024)*(column + y)) + x;
+				pD = (unsigned char *)&psxVuw[startxy];
+
+				for (row = 0; row < dx; row++)
+				{
+					lu = *((unsigned long *)pD);
+					*((unsigned long *)((surf)+(column*ddsd.Width * 4) + row * 4)) =
+						0xff000000 | (RED(lu)) | (GREEN(lu) << 8) | (BLUE(lu) << 16);
+					pD += 3;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (column = 0; column < dy; column++)
+		{
+			startxy = ((1024)*(column + y)) + x;
+			for (row = 0; row < dx; row++)
+			{
+				s = psxVuw[startxy++];
+				*((unsigned long *)((surf)+(column*ddsd.Width * 4) + row * 4)) = ClutToBGR(s);
 			}
 		}
 	}
@@ -603,34 +731,22 @@ int iUseGammaVal = 2048;
 
 void DXSetGamma(void)
 {
-#if !USE_DX9
 	float g;
 	if (iUseGammaVal == 2048) return;
 
 	g = (float)iUseGammaVal;
-	if (g > 512) g = ((g - 512) * 2) + 512;
-	g = 0.5f + ((g) / 1024.0f);
+	if (iUseGammaVal > 512) g = ((g - 512.f) * 2.f) + 512.f;
+	g = 0.5f + (g / 1024.0f);
 
-	// some cards will cheat... so we don't trust the caps here
-	// if (DD_Caps.dwCaps2 & DDCAPS2_PRIMARYGAMMA)
+	D3DGAMMARAMP ramp;
+	float f;
+	for (int i = 0; i < 256; i++)
 	{
-		float f; DDGAMMARAMP ramp; int i;
-		LPDIRECTDRAWGAMMACONTROL DD_Gamma = NULL;
-
-		if FAILED(IDirectDrawSurface_QueryInterface(DX.DDSPrimary, &IID_IDirectDrawGammaControl, (void**)&DD_Gamma))
-			return;
-
-		for (i = 0; i < 256; i++)
-		{
-			f = (((float)(i * 256))*g);
-			if (f > 65535) f = 65535;
-			ramp.red[i] = ramp.green[i] = ramp.blue[i] = (WORD)f;
-		}
-
-		IDirectDrawGammaControl_SetGammaRamp(DD_Gamma, 0, &ramp);
-		IDirectDrawGammaControl_Release(DD_Gamma);
+		f = ((float)i * 256.f) * g;
+		if (f > 65535.f) f = 65535;
+		ramp.red[i] = ramp.green[i] = ramp.blue[i] = (WORD)f;
 	}
-#endif
+	DX.Device->SetGammaRamp(0, D3DSGR_CALIBRATE, &ramp);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -638,43 +754,6 @@ void DXSetGamma(void)
 ////////////////////////////////////////////////////////////////////////
 void MoveScanLineArea(HWND hwnd)
 {
-#if !USE_DX9
-	LPDIRECTDRAWCLIPPER Clipper; HRESULT h;
-	DDBLTFX ddbltfx; RECT r;
-
-	if (FAILED(h = IDirectDraw_CreateClipper(DX.DD, 0, &Clipper, NULL)))
-		return;
-
-	IDirectDrawSurface_SetClipper(DX.DDSPrimary, NULL);
-
-	ddbltfx.dwSize = sizeof(ddbltfx);
-	ddbltfx.dwFillColor = 0x00000000;
-
-	// Fixed Scanline Mode for FullScreen where desktop was visible
-	// in background
-
-	if (iWindowMode)
-	{
-		GetClientRect(hwnd, &r);
-		ClientToScreen(hwnd, (LPPOINT)&r.left);
-		r.right += r.left;
-		r.bottom += r.top;
-	}
-	else
-	{
-		r.left = 0;
-		r.top = 0;
-		r.right = iResX;
-		r.bottom = iResY;
-	}
-
-	IDirectDrawSurface_Blt(DX.DDSPrimary, &r, NULL, NULL, DDBLT_COLORFILL, &ddbltfx);
-
-	SetScanLineList(Clipper);
-
-	IDirectDrawSurface_SetClipper(DX.DDSPrimary, Clipper);
-	IDirectDrawClipper_Release(Clipper);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -689,8 +768,8 @@ int DXinitialize()
 
 	if (!iWindowMode)
 	{
-		iResX = GetSystemMetrics(SM_CXFULLSCREEN);
-		iResY = GetSystemMetrics(SM_CYFULLSCREEN);
+		iResX = GetSystemMetrics(SM_CXSCREEN);
+		iResY = GetSystemMetrics(SM_CYSCREEN);
 	}
 
 	// init some DX vars
@@ -709,6 +788,23 @@ int DXinitialize()
 	if (FAILED(DX.DD->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &DX.d3ddm)))
 	{
 		MessageBox(NULL, "DirectX failed: GetAdapterDisplayMode", "Error", MB_OK);
+		return 0;
+	}
+
+	switch (DX.d3ddm.Format)
+	{
+	// allowed types
+	case D3DFMT_X8B8G8R8:
+	case D3DFMT_A8B8G8R8:
+		BlitScreen = BlitScreenBGR;
+		break;
+	case D3DFMT_A8R8G8B8:
+	case D3DFMT_X8R8G8B8:
+		BlitScreen = BlitScreenRGB;
+		break;
+	// everything else should fail
+	default:
+		MessageBox(NULL, "DirectX failed: 32 bit mode rendering is required.", "Error", MB_OK);
 		return 0;
 	}
 
@@ -756,25 +852,29 @@ int DXinitialize()
 #endif
 	if (FAILED(DX.DD->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, DX.hWnd, dwBehaviorFlags, &d3dpp, NULL, &DX.Device)))
 	{
-		MessageBox(NULL, "Failed to create D3D device", "Error", MB_OK);
+		MessageBox(NULL, "DirectX failed: CreateDeviceEx", "Error", MB_OK);
 		return 0;
 	}
 
 	//////////////////////////////////////////////////////// main surfaces
-	DX.Device->CreateRenderTarget(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight,
-		DX.d3ddm.Format, D3DMULTISAMPLE_NONE, 0, TRUE, &DX.DDSCopy, NULL);
+	if (FAILED(DX.Device->CreateRenderTarget(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, DX.d3ddm.Format, D3DMULTISAMPLE_NONE, 0, TRUE, &DX.DDSCopy, NULL)))
+	{
+		MessageBox(NULL, "DirectX failed: CreateRenderTarget", "Error", MB_OK);
+		return 0;
+	}
 
 	//----------------------------------------------------//
 	if (FAILED(DX.Device->CreateOffscreenPlainSurface(1024, 512, DX.d3ddm.Format, D3DPOOL_DEFAULT, &DX.DDSRender, NULL)))
+	{
+		MessageBox(NULL, "DirectX failed: CreateOffscreenPlainSurface", "Error", MB_OK);
 		return 0;
+	}
 
-	BlitScreen = BlitScreen32;
-	iDesktopCol = 32; //GetSystemMetrics(SM_CYSCREEN);
+	iDesktopCol = 32;
 
 	//////////////////////////////////////////////////////// small screen clean up
 
 	DXSetGamma();
-	//DX.Device->ColorFill(DX.DDSPrimary, NULL, D3DCOLOR_XRGB(0, 0, 0));
 	DX.Device->ColorFill(DX.DDSRender,  NULL, D3DCOLOR_XRGB(0, 0, 0));
 
 	//////////////////////////////////////////////////////// finish init
