@@ -1,110 +1,211 @@
-#include <cstdio>
-#include <cstdlib>
+#include <vector>
+#include <bitset>
+#include <string>
+#include <intrin.h>
+#include <array>
 
-struct Matrix4f {
-	/* Initialize matrix to the identity matrix */
-	Matrix4f()
-		: r0c0(1.0f), r0c1(0.0f), r0c2(0.0f), r0c3(0.0f)
-		, r1c0(0.0f), r1c1(1.0f), r1c2(0.0f), r1c3(0.0f)
-		, r2c0(0.0f), r2c1(0.0f), r2c2(1.0f), r2c3(0.0f)
-		, r3c0(0.0f), r3c1(0.0f), r3c2(0.0f), r3c3(1.0f)
+class InstructionSet
+{
+	// forward declarations
+	class InstructionSet_Internal;
+
+public:
+	// getters
+	static std::string Vendor(void) { return CPU_Rep.vendor_; }
+	static std::string Brand(void) { return CPU_Rep.brand_; }
+
+	static bool SSE3(void) { return CPU_Rep.f_1_ECX_[0]; }
+	static bool PCLMULQDQ(void) { return CPU_Rep.f_1_ECX_[1]; }
+	static bool MONITOR(void) { return CPU_Rep.f_1_ECX_[3]; }
+	static bool SSSE3(void) { return CPU_Rep.f_1_ECX_[9]; }
+	static bool FMA(void) { return CPU_Rep.f_1_ECX_[12]; }
+	static bool CMPXCHG16B(void) { return CPU_Rep.f_1_ECX_[13]; }
+	static bool SSE41(void) { return CPU_Rep.f_1_ECX_[19]; }
+	static bool SSE42(void) { return CPU_Rep.f_1_ECX_[20]; }
+	static bool MOVBE(void) { return CPU_Rep.f_1_ECX_[22]; }
+	static bool POPCNT(void) { return CPU_Rep.f_1_ECX_[23]; }
+	static bool AES(void) { return CPU_Rep.f_1_ECX_[25]; }
+	static bool XSAVE(void) { return CPU_Rep.f_1_ECX_[26]; }
+	static bool OSXSAVE(void) { return CPU_Rep.f_1_ECX_[27]; }
+	static bool AVX(void) { return CPU_Rep.f_1_ECX_[28]; }
+	static bool F16C(void) { return CPU_Rep.f_1_ECX_[29]; }
+	static bool RDRAND(void) { return CPU_Rep.f_1_ECX_[30]; }
+
+	static bool MSR(void) { return CPU_Rep.f_1_EDX_[5]; }
+	static bool CX8(void) { return CPU_Rep.f_1_EDX_[8]; }
+	static bool SEP(void) { return CPU_Rep.f_1_EDX_[11]; }
+	static bool CMOV(void) { return CPU_Rep.f_1_EDX_[15]; }
+	static bool CLFSH(void) { return CPU_Rep.f_1_EDX_[19]; }
+	static bool MMX(void) { return CPU_Rep.f_1_EDX_[23]; }
+	static bool FXSR(void) { return CPU_Rep.f_1_EDX_[24]; }
+	static bool SSE(void) { return CPU_Rep.f_1_EDX_[25]; }
+	static bool SSE2(void) { return CPU_Rep.f_1_EDX_[26]; }
+
+	static bool FSGSBASE(void) { return CPU_Rep.f_7_EBX_[0]; }
+	static bool BMI1(void) { return CPU_Rep.f_7_EBX_[3]; }
+	static bool HLE(void) { return CPU_Rep.isIntel_ && CPU_Rep.f_7_EBX_[4]; }
+	static bool AVX2(void) { return CPU_Rep.f_7_EBX_[5]; }
+	static bool BMI2(void) { return CPU_Rep.f_7_EBX_[8]; }
+	static bool ERMS(void) { return CPU_Rep.f_7_EBX_[9]; }
+	static bool INVPCID(void) { return CPU_Rep.f_7_EBX_[10]; }
+	static bool RTM(void) { return CPU_Rep.isIntel_ && CPU_Rep.f_7_EBX_[11]; }
+	static bool AVX512F(void) { return CPU_Rep.f_7_EBX_[16]; }
+	static bool RDSEED(void) { return CPU_Rep.f_7_EBX_[18]; }
+	static bool ADX(void) { return CPU_Rep.f_7_EBX_[19]; }
+	static bool AVX512PF(void) { return CPU_Rep.f_7_EBX_[26]; }
+	static bool AVX512ER(void) { return CPU_Rep.f_7_EBX_[27]; }
+	static bool AVX512CD(void) { return CPU_Rep.f_7_EBX_[28]; }
+	static bool SHA(void) { return CPU_Rep.f_7_EBX_[29]; }
+
+	static bool PREFETCHWT1(void) { return CPU_Rep.f_7_ECX_[0]; }
+
+	static bool LAHF(void) { return CPU_Rep.f_81_ECX_[0]; }
+	static bool LZCNT(void) { return CPU_Rep.isIntel_ && CPU_Rep.f_81_ECX_[5]; }
+	static bool ABM(void) { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[5]; }
+	static bool SSE4a(void) { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[6]; }
+	static bool XOP(void) { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[11]; }
+	static bool TBM(void) { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[21]; }
+
+	static bool SYSCALL(void) { return CPU_Rep.isIntel_ && CPU_Rep.f_81_EDX_[11]; }
+	static bool MMXEXT(void) { return CPU_Rep.isAMD_ && CPU_Rep.f_81_EDX_[22]; }
+	static bool RDTSCP(void) { return CPU_Rep.isIntel_ && CPU_Rep.f_81_EDX_[27]; }
+	static bool _3DNOWEXT(void) { return CPU_Rep.isAMD_ && CPU_Rep.f_81_EDX_[30]; }
+	static bool _3DNOW(void) { return CPU_Rep.isAMD_ && CPU_Rep.f_81_EDX_[31]; }
+
+private:
+	static const InstructionSet_Internal CPU_Rep;
+
+	class InstructionSet_Internal
 	{
-	}
+	public:
+		InstructionSet_Internal()
+			: nIds_{ 0 },
+			nExIds_{ 0 },
+			isIntel_{ false },
+			isAMD_{ false },
+			f_1_ECX_{ 0 },
+			f_1_EDX_{ 0 },
+			f_7_EBX_{ 0 },
+			f_7_ECX_{ 0 },
+			f_81_ECX_{ 0 },
+			f_81_EDX_{ 0 },
+			data_{},
+			extdata_{}
+		{
+			//int cpuInfo[4] = {-1};
+			std::array<int, 4> cpui;
 
-	/* Initialize matrix to row and column values */
-	Matrix4f(
-		float row0col0, float row0col1, float row0col2, float row0col3,
-		float row1col0, float row1col1, float row1col2, float row1col3,
-		float row2col0, float row2col1, float row2col2, float row2col3,
-		float row3col0, float row3col1, float row3col2, float row3col3
-	) noexcept
-		: r0c0(row0col0), r0c1(row0col1), r0c2(row0col2), r0c3(row0col3)
-		, r1c0(row1col0), r1c1(row1col1), r1c2(row1col2), r1c3(row1col3)
-		, r2c0(row2col0), r2c1(row2col1), r2c2(row2col2), r2c3(row2col3)
-		, r3c0(row3col0), r3c1(row3col1), r3c2(row3col2), r3c3(row3col3)
-	{
-	}
+			// Calling __cpuid with 0x0 as the function_id argument
+			// gets the number of the highest valid function ID.
+			__cpuid(cpui.data(), 0);
+			nIds_ = cpui[0];
 
-	/* Multiply one matrix by another */
-	Matrix4f operator * (const Matrix4f& m) const {
-		return Matrix4f(
-			r0c0 * m.r0c0 + r0c1 * m.r1c0 + r0c2 * m.r2c0 + r0c3 * m.r3c0,  // R0C0
-			r0c0 * m.r0c1 + r0c1 * m.r1c1 + r0c2 * m.r2c1 + r0c3 * m.r3c1,  // R0C1
-			r0c0 * m.r0c2 + r0c1 * m.r1c2 + r0c2 * m.r2c2 + r0c3 * m.r3c2,  // R0C2
-			r0c0 * m.r0c3 + r0c1 * m.r1c3 + r0c2 * m.r2c3 + r0c3 * m.r3c3,  // R0C3
+			for (int i = 0; i <= nIds_; ++i)
+			{
+				__cpuidex(cpui.data(), i, 0);
+				data_.push_back(cpui);
+			}
 
-			r1c0 * m.r0c0 + r1c1 * m.r1c0 + r1c2 * m.r2c0 + r1c3 * m.r3c0,  // R1C0
-			r1c0 * m.r0c1 + r1c1 * m.r1c1 + r1c2 * m.r2c1 + r1c3 * m.r3c1,  // R1C1
-			r1c0 * m.r0c2 + r1c1 * m.r1c2 + r1c2 * m.r2c2 + r1c3 * m.r3c2,  // R1C2
-			r1c0 * m.r0c3 + r1c1 * m.r1c3 + r1c2 * m.r2c3 + r1c3 * m.r3c3,  // R1C3
+			// Capture vendor string
+			char vendor[0x20];
+			memset(vendor, 0, sizeof(vendor));
+			*reinterpret_cast<int*>(vendor) = data_[0][1];
+			*reinterpret_cast<int*>(vendor + 4) = data_[0][3];
+			*reinterpret_cast<int*>(vendor + 8) = data_[0][2];
+			vendor_ = vendor;
+			if (vendor_ == "GenuineIntel")
+			{
+				isIntel_ = true;
+			}
+			else if (vendor_ == "AuthenticAMD")
+			{
+				isAMD_ = true;
+			}
 
-			r2c0 * m.r0c0 + r2c1 * m.r1c0 + r2c2 * m.r2c0 + r2c3 * m.r3c0,  // R2C0
-			r2c0 * m.r0c1 + r2c1 * m.r1c1 + r2c2 * m.r2c1 + r2c3 * m.r3c1,  // R2C1
-			r2c0 * m.r0c2 + r2c1 * m.r1c2 + r2c2 * m.r2c2 + r2c3 * m.r3c2,  // R2C2
-			r2c0 * m.r0c3 + r2c1 * m.r1c3 + r2c2 * m.r2c3 + r2c3 * m.r3c3,  // R2C3
+			// load bitset with flags for function 0x00000001
+			if (nIds_ >= 1)
+			{
+				f_1_ECX_ = data_[1][2];
+				f_1_EDX_ = data_[1][3];
+			}
 
-			r3c0 * m.r0c0 + r3c1 * m.r1c0 + r3c2 * m.r2c0 + r3c3 * m.r3c0,  // R3C0
-			r3c0 * m.r0c1 + r3c1 * m.r1c1 + r3c2 * m.r2c1 + r3c3 * m.r3c1,  // R3C1
-			r3c0 * m.r0c2 + r3c1 * m.r1c2 + r3c2 * m.r2c2 + r3c3 * m.r3c2,  // R3C2
-			r3c0 * m.r0c3 + r3c1 * m.r1c3 + r3c2 * m.r2c3 + r3c3 * m.r3c3   // R3C3
-		);
-	}
+			// load bitset with flags for function 0x00000007
+			if (nIds_ >= 7)
+			{
+				f_7_EBX_ = data_[7][1];
+				f_7_ECX_ = data_[7][2];
+			}
 
-	float r0c0; float r0c1; float r0c2; float r0c3;
-	float r1c0; float r1c1; float r1c2; float r1c3;
-	float r2c0; float r2c1; float r2c2; float r2c3;
-	float r3c0; float r3c1; float r3c2; float r3c3;
+			// Calling __cpuid with 0x80000000 as the function_id argument
+			// gets the number of the highest valid extended ID.
+			__cpuid(cpui.data(), 0x80000000);
+			nExIds_ = cpui[0];
+
+			char brand[0x40];
+			memset(brand, 0, sizeof(brand));
+
+			for (int i = 0x80000000; i <= nExIds_; ++i)
+			{
+				__cpuidex(cpui.data(), i, 0);
+				extdata_.push_back(cpui);
+			}
+
+			// load bitset with flags for function 0x80000001
+			if (nExIds_ >= 0x80000001)
+			{
+				f_81_ECX_ = extdata_[1][2];
+				f_81_EDX_ = extdata_[1][3];
+			}
+
+			// Interpret CPU brand string if reported
+			if (nExIds_ >= 0x80000004)
+			{
+				memcpy(brand, extdata_[2].data(), sizeof(cpui));
+				memcpy(brand + 16, extdata_[3].data(), sizeof(cpui));
+				memcpy(brand + 32, extdata_[4].data(), sizeof(cpui));
+				brand_ = brand;
+			}
+		};
+
+		int nIds_;
+		int nExIds_;
+		std::string vendor_;
+		std::string brand_;
+		bool isIntel_;
+		bool isAMD_;
+		std::bitset<32> f_1_ECX_;
+		std::bitset<32> f_1_EDX_;
+		std::bitset<32> f_7_EBX_;
+		std::bitset<32> f_7_ECX_;
+		std::bitset<32> f_81_ECX_;
+		std::bitset<32> f_81_EDX_;
+		std::vector<std::array<int, 4>> data_;
+		std::vector<std::array<int, 4>> extdata_;
+	};
 };
 
-int check(float value, float expected)
-{
-	// failed
-	if (value != expected) return 1;
-	// ok
-	return 0;
-}
-
-int checkIdentityMatrix(const Matrix4f& m)
-{
-	int test = 0;
-
-	test |= check(m.r0c0, 1);
-	test |= check(m.r0c1, 0);
-	test |= check(m.r0c2, 0);
-	test |= check(m.r0c3, 0);
-
-	test |= check(m.r1c0, 0);
-	test |= check(m.r1c1, 1);
-	test |= check(m.r1c2, 0);
-	test |= check(m.r1c3, 0);
-
-	test |= check(m.r2c0, 0);
-	test |= check(m.r2c1, 0);
-	test |= check(m.r2c2, 1);
-	test |= check(m.r2c3, 0);
-
-	test |= check(m.r3c0, 0);
-	test |= check(m.r3c1, 0);
-	test |= check(m.r3c2, 0);
-	test |= check(m.r3c3, 1);
-
-	return test;
-}
+// Initialize static member data
+const InstructionSet::InstructionSet_Internal InstructionSet::CPU_Rep;
 
 int Test_instruction_set()
 {
-
-	Matrix4f mat1;
-	if (checkIdentityMatrix(mat1))
-		return 0;
-
-	Matrix4f mat2;
-	if (checkIdentityMatrix(mat2))
-		return 0;
-
-	Matrix4f mat3 = mat1 * mat2;
-	if (checkIdentityMatrix(mat3))
-		return 0;
-
+#ifdef __AVX2__
+	//AVX2
+	return InstructionSet::AVX2();
+#elif defined ( __AVX__ )
+	//AVX
+	return InstructionSet::AVX();
+#elif (defined(_M_AMD64) || defined(_M_X64))
+	//SSE2 x64
+	return InstructionSet::SSE2();
+#elif _M_IX86_FP == 2
+	//SSE2 x32
+	return InstructionSet::SSE2();
+#elif _M_IX86_FP == 1
+	//SSE x32
+	return InstructionSet::SSE();
+#else
+	//nothing
 	return 1;
+#endif
 }

@@ -145,6 +145,7 @@ BOOL		   bVsync = FALSE;
 BOOL		   bVsync_Key = FALSE;
 
 void(*BlitScreen) (unsigned char *, long, long);
+HRESULT CreateVertex(void);
 
 ////////////////////////////////////////////////////////////////////////
 void SaveSurface(LPDIRECT3DSURFACE9 pSurface, LPCSTR filename, int width, int height)
@@ -177,11 +178,35 @@ void SaveSurface(LPDIRECT3DSURFACE9 pSurface, LPCSTR filename, int width, int he
 	pSurface->UnlockRect();
 }
 
+void SaveTexture(LPDIRECT3DTEXTURE9 pSurface, LPCSTR filename, int width, int height)
+{
+	D3DLOCKED_RECT Rect;
+	pSurface->LockRect(0, &Rect, NULL, D3DLOCK_DONOTWAIT);//D3DLOCK_READONLY);
+
+	// save the actual file
+	unsigned char *temp = new unsigned char[width * height * 4];
+	for (int y = 0, p = 0; y < height; y++)
+	{
+		unsigned char *row = &((unsigned char*)Rect.pBits)[Rect.Pitch * y];
+		for (int x = 0; x < width; x++, p += 4, row += 4)
+		{
+			temp[p + 0] = row[2];
+			temp[p + 1] = row[1];
+			temp[p + 2] = row[0];
+			temp[p + 3] = 0xff;
+		}
+	}
+	lodepng_encode32_file(filename, (const unsigned char*)temp, width, height);
+	delete[] temp;
+
+	pSurface->UnlockRect(0);
+}
+
 ////////////////////////////////////////////////////////////////////////
 static __inline void WaitVBlank(void)
 {
-	if (bVsync_Key)
-		DX.Device->WaitForVBlank(0);
+	//if (bVsync_Key)
+		//DX.Device->WaitForVBlank(0);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -190,7 +215,7 @@ int iColorMode = 0;
 
 D3DCOLOR ClutToRGB(unsigned short lu)
 {
-	int r, g, b;
+	unsigned int r, g, b;
 	// RGB555 conversion
 	if (iColorMode == 0)
 	{
@@ -235,6 +260,14 @@ void BlitScreenRGB(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR
 	short row, column;
 	short dx = (short)PreviousPSXDisplay.Range.x1;
 	short dy = (short)PreviousPSXDisplay.DisplayMode.y;
+
+#if 1
+	//memset(surf, 0xff, 1024 * 512 * 4);
+	//unsigned int *sr = (unsigned int*)surf;
+	//for (int i = 0; i < 1024 * 512; i++)
+	//	*sr++ = 0xffff00ff;
+	//return;
+#endif
 
 	if (iDebugMode && iFVDisplay)
 	{
@@ -402,15 +435,28 @@ void BlitScreenBGR(unsigned char * surf, long x, long y)  // BLIT IN 32bit COLOR
 ////////////////////////////////////////////////////////////////////////
 void DoClearScreenBuffer(void)                         // CLEAR DX BUFFER
 {
-	DX.Device->ColorFill(DX.DDSRender, NULL, D3DCOLOR_XRGB(0, 0, 0));
+	if (iFiltering >= 2)
+	{
+		D3DLOCKED_RECT Rect;
+		DX.DDTRender->LockRect(0, &Rect, NULL, D3DLOCK_DISCARD);
+		memset(Rect.pBits, 0, Rect.Pitch * 512);
+		DX.DDTRender->UnlockRect(0);
+	}
+	else DX.Device->ColorFill(DX.DDSRender, NULL, D3DCOLOR_XRGB(0, 0, 0));
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 void DoClearFrontBuffer(void)                         // CLEAR PRIMARY BUFFER
 {
-	//DX.Device->ColorFill(DX.DDSRender, NULL, D3DCOLOR_XRGB(0, 0, 0));
-	DX.Device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0, 0);
+	if (iFiltering >= 2)
+	{
+		D3DLOCKED_RECT Rect;
+		DX.DDTRender->LockRect(0, &Rect, NULL, D3DLOCK_DISCARD);
+		memset(Rect.pBits, 0, Rect.Pitch * 512);
+		DX.DDTRender->UnlockRect(0);
+	}
+	else DX.Device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -496,7 +542,7 @@ void NoStretchedBlit(void)
 		//DX.Device->StretchRect(DX.DDSRender, &ViewportRect, DX.DDSPrimary, &ScreenRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
 	#endif
 	}
-	if (DX.DDSScreenPic) DisplayPic();
+	//if (DX.DDSScreenPic) DisplayPic();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -574,15 +620,26 @@ void ShowGunCursor(unsigned char * surf)
 }
 
 ////////////////////////////////////////////////////////////////////////
-
 void DoBufferSwap(void)		// SWAP BUFFERS
 {							// (we don't swap... we blit only)
 	long x, y;
 	D3DLOCKED_RECT Rect;
-	if (FAILED(DX.DDSRender->LockRect(&Rect, NULL, D3DLOCK_DONOTWAIT | D3DLOCK_DISCARD)))
+
+	if (iFiltering >= 2)
 	{
-		DX.DDSRender->UnlockRect();
-		return;
+		if (FAILED(DX.DDTRender->LockRect(0, &Rect, NULL, D3DLOCK_DISCARD/*D3DLOCK_READONLY*/)))
+		{
+			DX.DDTRender->UnlockRect(0);
+			return;
+		}
+	}
+	else
+	{
+		if (FAILED(DX.DDSRender->LockRect(&Rect, NULL, D3DLOCK_DONOTWAIT | D3DLOCK_DISCARD)))
+		{
+			DX.DDSRender->UnlockRect();
+			return;
+		}
 	}
 	DX.DDSRender->GetDesc(&ddsd);
 
@@ -597,11 +654,12 @@ void DoBufferSwap(void)		// SWAP BUFFERS
 
 	if (usCursorActive) ShowGunCursor((unsigned char *)Rect.pBits);
 
-#if !USE_DX9
-	IDirectDrawSurface_Unlock(DX.DDSRender, &ddsd);
-#else
-	DX.DDSRender->UnlockRect();
-#endif
+	if (iFiltering >= 2)
+	{
+		DX.DDTRender->UnlockRect(0);
+		//D3DXSaveTextureToFile("test.png", D3DXIMAGE_FILEFORMAT::D3DXIFF_PNG, DX.DDTRender, NULL);
+	}
+	else DX.DDSRender->UnlockRect();
 
 	//if (ulKeybits & KEY_SHOWFPS) DisplayText();              // paint menu text
 
@@ -719,8 +777,8 @@ void DoBufferSwap(void)		// SWAP BUFFERS
 		}
 	}
 
-	if (DX.DDSScreenPic)
-		DisplayPic();
+	//if (DX.DDSScreenPic)
+	//	DisplayPic();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -757,6 +815,65 @@ void MoveScanLineArea(HWND hwnd)
 }
 
 ////////////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////
+HRESULT CreateVertex(void)
+{
+	TLVERTEX* vertices;
+
+	// Texture coordinates
+	float sizex = 1.0f, sizey = 1.0f;
+
+	// If texture is larger than DOSBox FB
+	sizex = ((float)PSXDisplay.DisplayMode.x - 0.5f) / 1024.f;
+	sizey = ((float)PSXDisplay.DisplayMode.y - 0.5f) / 512.f;
+	const float x0 = 0.5f / 1024.f;
+	const float y0 = 0.5f / 512.f;
+
+	// Lock the vertex buffer
+	DX.vertexBuffer->Lock(0, 0, (void**)&vertices, 0);
+
+	//Setup vertices
+	vertices[0].position = D3DXVECTOR3(-0.5f, -0.5f, 0.0f);
+	vertices[0].diffuse = 0xFFFFFFFF;
+	vertices[0].texcoord = D3DXVECTOR2(x0, sizey);
+	vertices[1].position = D3DXVECTOR3(-0.5f, 0.5f, 0.0f);
+	vertices[1].diffuse = 0xFFFFFFFF;
+	vertices[1].texcoord = D3DXVECTOR2(x0, y0);
+	vertices[2].position = D3DXVECTOR3(0.5f, -0.5f, 0.0f);
+	vertices[2].diffuse = 0xFFFFFFFF;
+	vertices[2].texcoord = D3DXVECTOR2(sizex, sizey);
+	vertices[3].position = D3DXVECTOR3(0.5f, 0.5f, 0.0f);
+	vertices[3].diffuse = 0xFFFFFFFF;
+	vertices[3].texcoord = D3DXVECTOR2(sizex, y0);
+
+	// Additional vertices required for some PS effects
+	//if (preProcess) {
+	//	vertices[4].position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	//	vertices[4].diffuse = 0xFFFFFF00;
+	//	vertices[4].texcoord = D3DXVECTOR2(0.0f, 1.0f);
+	//	vertices[5].position = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+	//	vertices[5].diffuse = 0xFFFFFF00;
+	//	vertices[5].texcoord = D3DXVECTOR2(0.0f, 0.0f);
+	//	vertices[6].position = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+	//	vertices[6].diffuse = 0xFFFFFF00;
+	//	vertices[6].texcoord = D3DXVECTOR2(1.0f, 1.0f);
+	//	vertices[7].position = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
+	//	vertices[7].diffuse = 0xFFFFFF00;
+	//	vertices[7].texcoord = D3DXVECTOR2(1.0f, 0.0f);
+	//}
+
+	// Unlock the vertex buffer
+	DX.vertexBuffer->Unlock();
+
+	DX.iResX = PSXDisplay.DisplayMode.x;
+	DX.iResY = PSXDisplay.DisplayMode.y;
+
+	return S_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
 // MAIN DIRECT DRAW INIT
 ////////////////////////////////////////////////////////////////////////
 
@@ -765,6 +882,8 @@ BOOL ReStart = FALSE;
 int DXinitialize()
 {
 	IDirect3D9Ex *DD;
+
+	memset(&DX, 0, sizeof(DX));
 
 	if (!iWindowMode)
 	{
@@ -844,20 +963,48 @@ int DXinitialize()
 	d3dpp.Windowed = TRUE;
 	d3dpp.EnableAutoDepthStencil = TRUE;
 	d3dpp.AutoDepthStencilFormat = depth_fmt;
-	d3dpp.PresentationInterval =
-#if 1
-		D3DPRESENT_INTERVAL_IMMEDIATE;
-#else
-		D3DPRESENT_INTERVAL_DEFAULT;
-#endif
-	if (FAILED(DX.DD->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, DX.hWnd, dwBehaviorFlags, &d3dpp, NULL, &DX.Device)))
+	if (bVsync)
+	{
+		d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+		d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+	}
+	else
+	{
+		d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+		d3dpp.FullScreen_RefreshRateInHz = 0;
+	}
+
+	//if (FAILED(DX.DD->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, DX.hWnd, dwBehaviorFlags, &d3dpp, NULL, &DX.Device)))
+	if (FAILED(DX.DD->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, DX.hWnd, dwBehaviorFlags, &d3dpp, &DX.Device)))
 	{
 		MessageBox(NULL, "DirectX failed: CreateDeviceEx", "Error", MB_OK);
 		return 0;
 	}
 
-	DX.Scaler = &ScalingEffect(DX.Device);
-	DX.Scaler->LoadEffect("plugins\\sshaders\\2xSaI.fx");
+	if (iFiltering >= 2)
+	{
+		DX.Scaler = new ScalingEffect(DX.Device);
+		if (FAILED(DX.Scaler->LoadEffect("plugins\\sshaders\\2xSaI.fx")))
+		{
+			MessageBox(NULL, "DirectX failed: LoadEffect", "Error", MB_OK);
+			return 0;
+		}
+		if (FAILED(DX.Device->CreateTexture(1024, 512, 0, D3DUSAGE_DYNAMIC, DX.d3ddm.Format, D3DPOOL_DEFAULT, &DX.DDTRender, NULL)))
+		{
+			MessageBox(NULL, "DirectX failed: CreateTexture", "Error", MB_OK);
+			return 0;
+		}
+
+		DX.Device->SetFVF(D3DFVF_TLVERTEX);
+
+		// Create vertex buffer
+		if (FAILED(DX.Device->CreateVertexBuffer(sizeof(TLVERTEX) * 4, NULL/*D3DUSAGE_WRITEONLY*/, D3DFVF_TLVERTEX, D3DPOOL_DEFAULT, &DX.vertexBuffer, NULL)))
+		{
+			MessageBox(NULL, "DirectX failed: CreateVertexBuffer", "Error", MB_OK);
+			return E_FAIL;
+		}
+
+	}
 
 	//////////////////////////////////////////////////////// main surfaces
 	if (FAILED(DX.Device->CreateRenderTarget(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, DX.d3ddm.Format, D3DMULTISAMPLE_NONE, 0, TRUE, &DX.DDSCopy, NULL)))
@@ -915,6 +1062,17 @@ void DXcleanup()                                       // DX CLEANUP
 		{
 			DX.DDSScreenPic->Release();
 			DX.DDSScreenPic = 0;
+		}
+		if (DX.DDTRender)
+		{
+			DX.DDTRender->Release();
+			DX.DDTRender = 0;
+		}
+		if (DX.Scaler)
+		{
+			//DX.Scaler->KillThis();
+			delete DX.Scaler;
+			DX.Scaler = 0;
 		}
 		DX.DDSRender->Release();
 		DX.Device->Release();
@@ -1049,106 +1207,31 @@ void CloseDisplay(void)
 void CreatePic(unsigned char * pMem)
 {
 	unsigned char * ps; int x, y;
-#if !USE_DX9
-	DDSURFACEDESC xddsd; HRESULT ddrval;
-
-	memset(&xddsd, 0, sizeof(DDSURFACEDESC));
-	xddsd.dwSize = sizeof(DDSURFACEDESC);
-	xddsd.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS;
-	// xddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-
-	if (iSysMemory)
-		xddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
-	else
-		xddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_VIDEOMEMORY;
-
-	xddsd.dwWidth = 128;
-	xddsd.dwHeight = 96;
-
-	if (IDirectDraw_CreateSurface(DX.DD, &xddsd, &DX.DDSScreenPic, NULL))
-	#else
 	if (FAILED(DX.Device->CreateOffscreenPlainSurface(128, 128, D3DFORMAT::D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &DX.DDSScreenPic, NULL)))
-	#endif
 	{
 		DX.DDSScreenPic = 0;
 		return;
 	}
 
-#if !USE_DX9
-	ddrval = IDirectDrawSurface_Lock(DX.DDSScreenPic, NULL, &xddsd, DDLOCK_WAIT | DDLOCK_WRITEONLY, NULL);
-
-	if (ddrval == DDERR_SURFACELOST)
-	{
-		IDirectDrawSurface_Restore(DX.DDSScreenPic);
-	}
-
-	if (ddrval != DD_OK)
-	{
-		IDirectDrawSurface_Unlock(DX.DDSScreenPic, &xddsd);
-		return;
-	}
-
-	ps = (unsigned char *)xddsd.lpSurface;
-#else
 	D3DLOCKED_RECT Rect;
 	DX.DDSScreenPic->LockRect(&Rect, NULL, D3DLOCK_DISCARD);
 	ps = (unsigned char*)Rect.pBits;
-#endif
 
-#if 0
-	if (iDesktopCol == 16)
+	unsigned long l;
+	for (y = 0; y < 96; y++)
 	{
-		unsigned short s;
-		for (y = 0; y < 96; y++)
+		for (x = 0; x < 128; x++)
 		{
-			for (x = 0; x < 128; x++)
-			{
-				s = (*(pMem + 0)) >> 3;
-				s |= ((*(pMem + 1)) & 0xfc) << 3;
-				s |= ((*(pMem + 2)) & 0xf8) << 8;
-				pMem += 3;
-				*((unsigned short *)(ps + y * Rect.Pitch + x * 2)) = s;
-			}
-		}
-	}
-	else if (iDesktopCol == 15)
-	{
-		unsigned short s;
-		for (y = 0; y < 96; y++)
-		{
-			for (x = 0; x < 128; x++)
-			{
-				s = (*(pMem + 0)) >> 3;
-				s |= ((*(pMem + 1)) & 0xfc) << 2;
-				s |= ((*(pMem + 2)) & 0xf8) << 7;
-				pMem += 3;
-				*((unsigned short *)(ps + y * Rect.Pitch + x * 2)) = s;
-			}
-		}
-	}
-	else if (iDesktopCol == 32)
-	#endif
-	{
-		unsigned long l;
-		for (y = 0; y < 96; y++)
-		{
-			for (x = 0; x < 128; x++)
-			{
-				l = *(pMem + 0);
-				l |= (*(pMem + 1)) << 8;
-				l |= (*(pMem + 2)) << 16;
-				l |= 0xff000000;
-				pMem += 3;
-				*((unsigned long *)(ps + y * Rect.Pitch + x * 4)) = l;
-			}
+			l = *(pMem + 0);
+			l |= (*(pMem + 1)) << 8;
+			l |= (*(pMem + 2)) << 16;
+			l |= 0xff000000;
+			pMem += 3;
+			*((unsigned long *)(ps + y * Rect.Pitch + x * 4)) = l;
 		}
 	}
 
-#if !USE_DX9
-	IDirectDrawSurface_Unlock(DX.DDSScreenPic, &xddsd);
-#else
 	DX.DDSScreenPic->UnlockRect();
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1208,7 +1291,7 @@ void DisplayPic(void)
 #if !USE_DX9
 	IDirectDrawSurface_Blt(DX.DDSPrimary, &ScreenRect, DX.DDSScreenPic, &HelperRect, DDBLT_WAIT, NULL);
 #else
-	DX.Device->StretchRect(DX.DDSScreenPic, &HelperRect, DX.DDSRender, &ScreenRect, D3DTEXTUREFILTERTYPE::D3DTEXF_ANISOTROPIC);
+	DX.Device->StretchRect(DX.DDSScreenPic, &HelperRect, DX.DDSRender, &ScreenRect, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
 #endif
 }
 

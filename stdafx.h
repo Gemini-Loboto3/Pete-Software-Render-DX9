@@ -41,12 +41,10 @@
 // defines/libs, therefore I've decided to use the mingw headers and 
 // the d3dx.lib (old libs: d3dim.lib dxguid.lib)
 
-#if !USE_DX9
-#include <ddraw.h>
-#include <d3d.h>
-#else
-#include <d3d9.h>
+#if _DEBUG
+#define D3D_DEBUG_INFO
 #endif
+#include <d3d9.h>
 
 //#include "mingw_ddraw.h"                       
 //#include "mingw_d3dtypes.h"

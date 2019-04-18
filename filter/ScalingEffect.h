@@ -28,11 +28,11 @@ class ScalingEffect
 {
     float				m_scale;
     LPCSTR				m_strName;
-    std::string				m_strErrors;
-    LPDIRECT3DDEVICE9			m_pd3dDevice;
+    std::string			m_strErrors;
+    LPDIRECT3DDEVICE9	m_pd3dDevice;
 
-    LPD3DXEFFECT			m_pEffect;
-    D3DXEFFECT_DESC			m_EffectDesc;
+    LPD3DXEFFECT		m_pEffect;
+    D3DXEFFECT_DESC		m_EffectDesc;
 
     // Matrix Handles
     D3DXHANDLE m_MatWorldEffectHandle;
@@ -60,6 +60,15 @@ public:
 
     ScalingEffect(LPDIRECT3DDEVICE9 pd3dDevice);
     ~ScalingEffect(void);
+
+	void Create(LPDIRECT3DDEVICE9 pd3dDevice)
+	{
+		m_scale = 0.f;
+		m_pd3dDevice = pd3dDevice;
+		m_strName = "Unnamed";
+		m_pEffect = nullptr;
+		KillThis();
+	}
 
     void KillThis();
 

@@ -306,3 +306,5 @@ $RECYCLE.BIN/
 /Release AVX2/gpuPeopsSoftDX.tlog
 /Release SSE
 /Release SSE2
+/filter/direct3d.cpp
+/filter/direct3d.h

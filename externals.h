@@ -120,6 +120,15 @@ typedef struct PSXRECTTAG
 
 #ifdef _WINDOWS
 
+struct TLVERTEX
+{
+	D3DXVECTOR3 position;       // vertex position
+	D3DCOLOR    diffuse;
+	D3DXVECTOR2 texcoord;       // texture coords
+};
+
+#define D3DFVF_TLVERTEX D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1
+
 typedef struct SDXTAG
 {
 #if !USE_DX9
@@ -131,14 +140,21 @@ typedef struct SDXTAG
 	LPDIRECTDRAWSURFACE            DDSScreenPic;
 #else
 	LPDIRECT3D9EX			DD;
-	LPDIRECT3DDEVICE9EX	    Device;
+	LPDIRECT3DDEVICE9	    Device;
 	D3DDISPLAYMODE		    d3ddm;
 	D3DPRESENT_PARAMETERS   D3Dpp;
 	LPDIRECT3DSURFACE9		DDSRender,		// target surface
 		DDSCopy,		// helper surface to displa text
 		DDSScreenPic;	// native resolution surface, this is blit to the helper and then to the primary surface
+	// stuff used for shader scaling
 	ScalingEffect			*Scaler;		// applies shader effects
-	LPDIRECT3DTEXTURE9		DDTRender;
+	LPDIRECT3DTEXTURE9		DDTRender;		// contains a copy of the render area
+	// Projection matrices
+	D3DXMATRIX				m_matProj;
+	D3DXMATRIX				m_matWorld;
+	D3DXMATRIX				m_matView;
+	IDirect3DVertexBuffer9*	vertexBuffer;	// VertexBuffer
+	int						iResX, iResY;	// check these to figure out if we need new vertices
 #endif
 	HWND                    hWnd;
 } sDX;

@@ -38,6 +38,7 @@ void          DisplayPic(void);
 void          ShowGpuPic(void);
 void          ShowTextGpuPic(void);
 void          SaveSurface(LPDIRECT3DSURFACE9 pSurface, LPCSTR filename, int width = -1, int height = -1);
+void          SaveTexture(LPDIRECT3DTEXTURE9 pTexture, LPCSTR filename, int width = -1, int height = -1);
 
 #ifdef _WINDOWS
 void          MoveScanLineArea(HWND hwnd);
